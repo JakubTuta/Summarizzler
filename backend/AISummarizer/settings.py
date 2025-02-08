@@ -109,7 +109,7 @@ WSGI_APPLICATION = "AISummarizer.wsgi.application"
 
 DATABASES = {
     "default": dj_database_url.config(
-        default=os.getenv("DATABASE_URL", None),
+        default=os.getenv("POSTGRES_URL", None),
     ),
 }
 

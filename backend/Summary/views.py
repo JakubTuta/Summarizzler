@@ -11,8 +11,48 @@ from . import functions, models, serializers
 
 
 class Website(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    def get_authentication_classes(self):
+        if self.request.method == "GET":
+            return []
+        return [JWTAuthentication]
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get(self, request: HttpRequest) -> Response:
+        limit = request.query_params.get("limit", 10)  # type: ignore
+        try:
+            limit = int(limit)
+            if limit <= 0:
+                return Response(
+                    {"message": "Limit must be a positive integer."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except ValueError:
+            return Response(
+                {"message": "Invalid limit value. Must be an integer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if request.user.is_authenticated:
+            user = User(request.user)
+            if (user_data := users_functions.find_user_data(user=user)) is not None:
+                summaries = models.Summary.objects.filter(author=user_data).order_by(
+                    "created_at"
+                )[:limit]
+            else:
+                return Response(
+                    {"message": "User data not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        else:
+            summaries = models.Summary.objects.all().order_by("created_at")[:limit]
+
+        serializer = serializers.SummarySerializer(summaries, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request: HttpRequest) -> Response:
         user: User = request.user  # type: ignore
