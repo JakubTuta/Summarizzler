@@ -1,17 +1,24 @@
 from django.http import HttpRequest
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from . import functions, serializers
 
 
 class User(APIView):
-    authentication_classes = []
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def get(self, request: HttpRequest, user_id: int) -> Response:
+        if user_id != request.user.id:  # type: ignore
+            return Response(
+                {"message": "User not authenticated"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
         if (user_data := functions.find_user_data(user_id=user_id)) is None:
             return Response(
                 {"message": "User data not found"},

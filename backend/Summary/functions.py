@@ -1,11 +1,11 @@
 import os
 import typing
 
-import requests
 from bs4 import BeautifulSoup
 from django.http import QueryDict
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
+from playwright.sync_api import sync_playwright
 
 from . import models, serializers
 
@@ -55,14 +55,21 @@ class Website:
 
     @staticmethod
     def get_dom_content(url: str) -> typing.Optional[str]:
-        response = requests.get(url)
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch()
+                page = browser.new_page()
+                page.goto(url, timeout=60000)
+                page.wait_for_selector("body", timeout=30000)
+                dom_content = page.content()
+                browser.close()
 
-        if response.status_code != 200:
+                return dom_content
+
+        except Exception as e:
+            print(f"Playwright scraping failed: {e}")
+
             return None
-
-        page_content = response.text
-
-        return page_content
 
     @staticmethod
     def get_body_content(dom_content: str) -> typing.Optional[str]:

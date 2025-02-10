@@ -1,4 +1,5 @@
 import Users.functions as users_functions
+import Users.serializers as users_serializers
 from django.contrib.auth.models import User
 from django.http import HttpRequest
 from rest_framework import status
@@ -11,50 +12,12 @@ from . import functions, models, serializers
 
 
 class Website(APIView):
-    def get_authentication_classes(self):
-        if self.request.method == "GET":
-            return []
-        return [JWTAuthentication]
-
-    def get_permissions(self):
-        if self.request.method == "GET":
-            return [AllowAny()]
-        return [IsAuthenticated()]
-
-    def get(self, request: HttpRequest) -> Response:
-        limit = request.query_params.get("limit", 10)  # type: ignore
-        try:
-            limit = int(limit)
-            if limit <= 0:
-                return Response(
-                    {"message": "Limit must be a positive integer."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        except ValueError:
-            return Response(
-                {"message": "Invalid limit value. Must be an integer."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if request.user.is_authenticated:
-            user = User(request.user)
-            if (user_data := users_functions.find_user_data(user=user)) is not None:
-                summaries = models.Summary.objects.filter(author=user_data).order_by(
-                    "created_at"
-                )[:limit]
-            else:
-                return Response(
-                    {"message": "User data not found"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-        else:
-            summaries = models.Summary.objects.all().order_by("created_at")[:limit]
-
-        serializer = serializers.SummarySerializer(summaries, many=True)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def post(self, request: HttpRequest) -> Response:
+        # url: /summary/website/
+
         user: User = request.user  # type: ignore
         if (user_data := users_functions.find_user_data(user=user)) is None:
             return Response(
@@ -106,13 +69,13 @@ class Website(APIView):
             "summary": bot_response,
             "author": user_data,
             "user_prompt": user_prompt,
+            "is_private": request_data.get("private", False),
         }
 
         try:
             summary = functions.create_summary(data)
         except Exception as e:
-            print(e)
-            return Response({"Error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         if summary is None:
             return Response(
@@ -126,3 +89,86 @@ class Website(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class SummaryList(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request: HttpRequest) -> Response:
+        try:
+            limit = int(request.query_params.get("limit", 10))  # type: ignore
+
+        except ValueError:
+            return Response(
+                {"message": "Invalid limit value"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        summaries = models.Summary.objects.all().order_by(
+            "-favorites", "-likes", "-created_at"
+        )
+
+        if request.user.is_authenticated and (user := users_functions.find_user_data(user=request.user)) is not None:  # type: ignore
+            query_params = request.query_params  # type: ignore
+            me_param = query_params.get("me", "false")
+            private_param = query_params.get("private", "all")
+
+            if me_param == "true":
+                summaries = summaries.filter(author=user)
+
+            if private_param == "true":
+                summaries = summaries.filter(author=user, is_private=True)
+
+            elif private_param == "false":
+                summaries = summaries.filter(is_private=False)
+
+        else:
+            summaries = summaries.filter(is_private=False)
+
+        summaries = summaries[:limit]
+        serializer = serializers.SummarySerializer(summaries, many=True)
+
+        return_data = [
+            {
+                **summary,
+                "author": (
+                    users_serializers.UserDataSerializer(author).data
+                    if author
+                    else None
+                ),
+            }
+            for summary in serializer.data
+            if (author := users_functions.find_user_data(user=summary["author"]))
+            is not None
+            or not summary["author"]
+        ]
+
+        return Response(return_data, status=status.HTTP_200_OK)
+
+
+class SummaryDetail(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request: HttpRequest, id: int) -> Response:
+        user = None
+        if request.user.is_authenticated:
+            user = User(request.user)
+
+        try:
+            summary = models.Summary.objects.get(id=id)
+
+            if not summary.is_private and user is not None and user != summary.author:
+                return Response(
+                    {"message": "Summary is private"}, status=status.HTTP_403_FORBIDDEN
+                )
+
+        except models.Summary.DoesNotExist:
+            return Response(
+                {"message": "Summary not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = serializers.SummarySerializer(summary)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)

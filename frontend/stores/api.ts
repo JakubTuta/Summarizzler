@@ -1,4 +1,6 @@
-import axios, { type AxiosResponse } from 'axios'
+import type { AxiosResponse } from 'axios'
+import axios, { AxiosError } from 'axios'
+
 import { ACCESS_TOKEN } from '~/constants/localStorage'
 
 export const useApiStore = defineStore('api', () => {
@@ -28,7 +30,7 @@ export const useApiStore = defineStore('api', () => {
   const sendRequest = async (
     { url, method, data }:
     { url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE', data?: any },
-  ): Promise<AxiosResponse | null> => {
+  ): Promise<AxiosResponse | AxiosError | null> => {
     let response: AxiosResponse | null = null
 
     try {
@@ -49,14 +51,14 @@ export const useApiStore = defineStore('api', () => {
     catch (error) {
       console.error(error)
 
-      return null
+      return error as AxiosError
     }
 
     return response
   }
 
-  const isResponseOk = (response: AxiosResponse | null): boolean => {
-    return response !== null && response.status >= 200 && response.status < 300
+  const isResponseOk = (response: AxiosResponse | AxiosError | null): boolean => {
+    return response !== null && !(response instanceof AxiosError) && response.status >= 200 && response.status < 300
   }
 
   return {

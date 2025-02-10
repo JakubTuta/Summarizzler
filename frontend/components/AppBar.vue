@@ -15,6 +15,29 @@ const search = ref('')
     rounded
     style="display: flex; align-items: center;"
   >
+    <div>
+      <v-btn
+        :to="user
+          ? '/panel'
+          : '/'"
+        variant="text"
+        color="secondary"
+        style="cursor: pointer;"
+        class="z-1"
+      >
+        Home
+      </v-btn>
+
+      <v-btn
+        variant="text"
+        to="/discover"
+        color="secondary"
+        class="z-1 ml-2"
+      >
+        Discover
+      </v-btn>
+    </div>
+
     <div style="position: absolute; left: 0; right: 0; justify-content: center; display: flex;">
       <v-text-field
         v-model="search"
@@ -37,12 +60,13 @@ const search = ref('')
         to="/auth/login"
         color="primary"
         prepend-icon="mdi-login"
+        class="z-1"
       >
         Login
       </v-btn>
 
       <v-btn
-        class="ml-2"
+        class="z-1 ml-2"
         variant="text"
         to="/auth/register"
         color="primary"
@@ -57,6 +81,7 @@ const search = ref('')
       class="ml-auto"
     >
       <v-btn
+        class="z-1"
         variant="text"
         to="/summary/create"
         color="secondary"
@@ -66,7 +91,7 @@ const search = ref('')
       </v-btn>
 
       <v-btn
-        class="ml-2"
+        class="z-1 ml-2"
         variant="text"
         to="/auth/logout"
         color="primary"
@@ -96,7 +121,18 @@ const search = ref('')
     </div>
 
     <template #extension>
-      <div style="display: flex; justify-content: center; width: 100%;">
+      <div style="display: flex; justify-content: center; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <v-btn
+          :to="user
+            ? '/panel'
+            : '/'"
+          variant="text"
+          color="secondary"
+          style="cursor: pointer;"
+        >
+          Home
+        </v-btn>
+
         <v-btn
           v-if="!user"
           variant="text"

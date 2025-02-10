@@ -14,11 +14,12 @@ class SummarySerializer(serializers.ModelSerializer):
             "content_type",
             "summary",
             "author",
-            "user_prompt",  # Add this line to include user_prompt as well
-            "created_at",
+            "user_prompt",
+            "is_private",
             "likes",
             "dislikes",
             "favorites",
+            "created_at",
         )
 
     def create(self, validated_data):
