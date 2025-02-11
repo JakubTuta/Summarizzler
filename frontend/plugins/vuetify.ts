@@ -51,12 +51,13 @@ export default defineNuxtPlugin((app) => {
       },
       VBtn: {
         variant: 'outlined',
+        rounded: 'lg',
       },
       VContainer: {
         style: 'max-width: 1200px',
       },
       VCard: {
-        rounded: 'lg',
+        rounded: 'xl',
         width: '100%',
       },
       VTab: {

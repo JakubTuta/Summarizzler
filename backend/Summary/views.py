@@ -1,6 +1,7 @@
 import Users.functions as users_functions
 import Users.serializers as users_serializers
 from django.contrib.auth.models import User
+from django.db.models.manager import BaseManager
 from django.http import HttpRequest
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -16,8 +17,6 @@ class Website(APIView):
     authentication_classes = [JWTAuthentication]
 
     def post(self, request: HttpRequest) -> Response:
-        # url: /summary/website/
-
         user: User = request.user  # type: ignore
         if (user_data := users_functions.find_user_data(user=user)) is None:
             return Response(
@@ -96,8 +95,10 @@ class SummaryList(APIView):
     authentication_classes = [JWTAuthentication]
 
     def get(self, request: HttpRequest) -> Response:
+        query_params = request.query_params  # type: ignore
+
         try:
-            limit = int(request.query_params.get("limit", 10))  # type: ignore
+            limit = int(query_params.get("limit", 10))
 
         except ValueError:
             return Response(
@@ -105,12 +106,16 @@ class SummaryList(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        summaries = models.Summary.objects.all().order_by(
-            "-favorites", "-likes", "-created_at"
+        sort_param = query_params.get("sort", "date")
+        start_after_id = query_params.get("startAfter", None)
+
+        summaries: BaseManager[models.Summary] = models.Summary.objects.all()
+        summaries = functions.sort_summaries(summaries, sort_param)
+        summaries = functions.filter_by_start_after(
+            summaries, start_after_id, sort_param
         )
 
         if request.user.is_authenticated and (user := users_functions.find_user_data(user=request.user)) is not None:  # type: ignore
-            query_params = request.query_params  # type: ignore
             me_param = query_params.get("me", "false")
             private_param = query_params.get("private", "all")
 

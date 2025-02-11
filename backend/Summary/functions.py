@@ -2,6 +2,7 @@ import os
 import typing
 
 from bs4 import BeautifulSoup
+from django.db.models.manager import BaseManager
 from django.http import QueryDict
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -48,6 +49,56 @@ def get_langchain_template(content_type: str) -> str:
 
         case _:
             return ""
+
+
+def sort_summaries(
+    summaries: BaseManager[models.Summary], sort_by: str
+) -> BaseManager[models.Summary]:
+    match sort_by:
+        case "date":
+            return summaries.order_by("-created_at")
+        case "likes":
+            return summaries.order_by("-likes")
+        case "favorites":
+            return summaries.order_by("-favorites")
+        case _:
+            return summaries
+
+
+def filter_by_start_after(
+    summaries: BaseManager[models.Summary], start_after: typing.Optional[str], sort: str
+) -> BaseManager[models.Summary]:
+    print(start_after)
+    print(sort)
+    if start_after is None:
+        return summaries
+
+    if (summary := get_summary_by_id(start_after)) is not None:
+        print(summary)
+        match sort:
+            case "date":
+                summaries = summaries.filter(
+                    created_at__lt=summary.created_at
+                ).order_by("-created_at")
+
+            case "likes":
+                summaries = summaries.filter(likes__lt=summary.likes).order_by("-likes")
+
+            case "favorites":
+                summaries = summaries.filter(favorites__lt=summary.favorites).order_by(
+                    "-favorites"
+                )
+
+    return summaries
+
+
+def get_summary_by_id(summary_id: str) -> typing.Optional[models.Summary]:
+    try:
+        summary = models.Summary.objects.get(id=summary_id)
+
+        return summary
+    except models.Summary.DoesNotExist:
+        return None
 
 
 class Website:

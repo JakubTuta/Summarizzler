@@ -2,8 +2,11 @@
 const summaryStore = useSummaryStore()
 const { summaries, loading } = storeToRefs(summaryStore)
 
-onMounted(() => {
-  summaryStore.getSummaries(8)
+const summariesPerPage = 8
+
+onMounted(async () => {
+  summaryStore.clearSummaries()
+  await summaryStore.getSummaries(summariesPerPage, 'false', false, 'favorites')
 })
 </script>
 
@@ -11,7 +14,7 @@ onMounted(() => {
   <v-container style="display: flex; align-items: center; justify-content: center; height: 100%">
     <v-row v-if="loading">
       <v-col
-        v-for="i in 8"
+        v-for="i in summariesPerPage"
         :key="i"
         cols="12"
         md="4"
@@ -64,7 +67,7 @@ onMounted(() => {
           </v-card-text>
 
           <v-card-actions>
-            <div style="position: absolute; left: 10px; bottom: 10px; display: flex; align-items: center; justify-content: center;">
+            <div style="position: absolute; left: 15px; bottom: 10px; display: flex; align-items: center; justify-content: center;">
               <span
                 class="text-yellow"
                 style="display: flex; align-items: center; justify-content: center;"

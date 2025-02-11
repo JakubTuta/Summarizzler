@@ -1,3 +1,4 @@
+import type { AxiosResponse } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import type { IUser } from '~/models/user'
 import { mapUser } from '~/models/user'
@@ -32,7 +33,8 @@ export const useUserStore = defineStore('user', () => {
       return
     }
 
-    const responseData = response!.data
+    const responseObject = response as AxiosResponse
+    const responseData = responseObject.data
     user.value = mapUser(responseData.user)
 
     loading.value = false
