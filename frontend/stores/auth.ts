@@ -1,3 +1,4 @@
+import type { AxiosResponse } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { type IUser, mapUser } from '~/models/user'
 
@@ -34,7 +35,8 @@ export const useAuthStore = defineStore('auth', () => {
       return
     }
 
-    const responseData = response!.data
+    const responseObject = response as AxiosResponse<{ tokens: { access: string, refresh: string }, user: IUser }>
+    const responseData = responseObject.data
 
     const tokens = responseData.tokens
     localStorage.setItem(ACCESS_TOKEN, tokens.access)
@@ -70,7 +72,8 @@ export const useAuthStore = defineStore('auth', () => {
       return
     }
 
-    const responseData = response!.data
+    const responseObject = response as AxiosResponse<{ tokens: { access: string, refresh: string }, user: IUser }>
+    const responseData = responseObject.data
 
     const tokens = responseData.tokens
     localStorage.setItem(ACCESS_TOKEN, tokens.access)
@@ -106,8 +109,9 @@ export const useAuthStore = defineStore('auth', () => {
       return false
     }
 
-    const tokens = response!.data.tokens
-    localStorage.setItem(ACCESS_TOKEN, tokens.access)
+    const responseObject = response as AxiosResponse<{ access: string }>
+    const accessToken = responseObject.data.access
+    localStorage.setItem(ACCESS_TOKEN, accessToken)
 
     return true
   }
@@ -163,7 +167,8 @@ export const useAuthStore = defineStore('auth', () => {
       return
     }
 
-    const responseData = response!.data
+    const responseObject = response as AxiosResponse<{ user: IUser }>
+    const responseData = responseObject.data
     user.value = mapUser(responseData.user)
 
     if (['/', '/auth/login', '/auth/register'].includes(router.currentRoute.value.path)) {

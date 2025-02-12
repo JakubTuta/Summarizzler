@@ -121,44 +121,61 @@ const search = ref('')
     </div>
 
     <template #extension>
-      <div style="display: flex; justify-content: center; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
-        <v-btn
-          :to="user
-            ? '/panel'
-            : '/'"
-          variant="text"
-          color="secondary"
-          style="cursor: pointer;"
-        >
-          Home
-        </v-btn>
+      <div style="display: flex; justify-content: space-between; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <div>
+          <v-btn
+            :to="user
+              ? '/panel'
+              : '/'"
+            variant="text"
+            color="secondary"
+            style="cursor: pointer;"
+          >
+            Home
+          </v-btn>
 
-        <v-btn
-          v-if="!user"
-          variant="text"
-          to="/auth/login"
-          color="primary"
-        >
-          Login
-        </v-btn>
+          <v-btn
+            variant="text"
+            to="/discover"
+            color="secondary"
+            class="ml-2"
+          >
+            Discover
+          </v-btn>
+        </div>
 
-        <v-btn
-          v-if="!user"
-          variant="text"
-          to="/auth/register"
-          color="primary"
-        >
-          Register
-        </v-btn>
+        <div>
+          <v-btn
+            v-if="!user"
+            variant="text"
+            to="/auth/login"
+            color="primary"
+            prepend-icon="mdi-login"
+          >
+            Login
+          </v-btn>
 
-        <v-btn
-          v-if="user"
-          variant="text"
-          to="/auth/logout"
-          color="primary"
-        >
-          Logout
-        </v-btn>
+          <v-btn
+            v-if="!user"
+            variant="text"
+            to="/auth/register"
+            color="primary"
+            prepend-icon="mdi-account-plus"
+            class="ml-2"
+          >
+            Register
+          </v-btn>
+
+          <v-btn
+            v-if="user"
+            variant="text"
+            to="/auth/logout"
+            color="primary"
+            prepend-icon="mdi-logout"
+          >
+            Logout
+          </v-btn>
+        </div>
       </div>
     </template>
   </v-app-bar>

@@ -4,7 +4,7 @@ export interface ISummary {
   id: number
   url: string
   title: string
-  content_type: string
+  contentType: string
   summary: string
   author: IUser | null
   userPrompt: string
@@ -12,7 +12,8 @@ export interface ISummary {
   likes: number
   dislikes: number
   favorites: number
-  created_at: string
+  tags: string[]
+  createdAt: string
 }
 
 export function mapSummary(summary: any): ISummary {
@@ -20,7 +21,7 @@ export function mapSummary(summary: any): ISummary {
     id: summary?.id || 0,
     url: summary?.url || '',
     title: summary?.title || '',
-    content_type: summary?.content_type || '',
+    contentType: summary?.content_type || '',
     summary: summary?.summary || '',
     author: summary?.author || null,
     userPrompt: summary?.user_prompt || '',
@@ -28,6 +29,7 @@ export function mapSummary(summary: any): ISummary {
     likes: summary?.likes || 0,
     dislikes: summary?.dislikes || 0,
     favorites: summary?.favorites || 0,
-    created_at: summary?.created_at || '',
+    tags: summary?.tags || [],
+    createdAt: summary?.created_at || '',
   }
 }

@@ -15,6 +15,9 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const getUser = async () => {
+    if (user.value)
+      return
+
     loading.value = true
 
     const decodedToken = jwtDecode(localStorage.getItem(ACCESS_TOKEN)!)

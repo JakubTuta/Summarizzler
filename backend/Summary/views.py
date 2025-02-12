@@ -65,10 +65,12 @@ class Website(APIView):
             "url": url,
             "title": title,
             "content_type": functions.Website.content_type,
-            "summary": bot_response,
+            "summary": bot_response["content"],
             "author": user_data,
             "user_prompt": user_prompt,
             "is_private": request_data.get("private", False),
+            "tags": bot_response["tags"],
+            "category": bot_response["category"],
         }
 
         try:
@@ -176,4 +178,12 @@ class SummaryDetail(APIView):
 
         serializer = serializers.SummarySerializer(summary)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return_data = serializer.data
+        if (
+            author := users_functions.find_user_data(user=return_data["author"])
+        ) is not None or not return_data["author"]:
+            return_data["author"] = (
+                users_serializers.UserDataSerializer(author).data if author else None
+            )
+
+        return Response(return_data, status=status.HTTP_200_OK)

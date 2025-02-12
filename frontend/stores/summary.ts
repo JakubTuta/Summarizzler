@@ -56,12 +56,17 @@ export const useSummaryStore = defineStore('summary', () => {
     privateParam: 'all' | 'true' | 'false' = 'all',
     meOnly: boolean = false,
     sort: 'favorites' | 'likes' | 'date' = 'date',
+    contentType: 'text' | 'website' | 'pdf' | 'video' | null = null,
   ) => {
     loading.value = true
     let url = `/summary/?limit=${limit}&private=${privateParam}&me=${meOnly}&sort=${sort}`
 
     if (lastLoadedObject.value) {
       url += `&startAfter=${lastLoadedObject.value.id}`
+    }
+
+    if (contentType) {
+      url += `&contentType=${contentType}`
     }
 
     const response = await apiStore.sendRequest({ url, method: 'GET' })
@@ -83,6 +88,29 @@ export const useSummaryStore = defineStore('summary', () => {
     loading.value = false
   }
 
+  const getSummaryById = async (id: string) => {
+    loading.value = true
+    const url = `/summary/id/${id}/`
+
+    const response = await apiStore.sendRequest({ url, method: 'GET' })
+
+    if (response?.status === 401) {
+      loading.value = false
+
+      throw new Error('Unauthorized')
+    }
+
+    if (apiStore.isResponseOk(response)) {
+      loading.value = false
+
+      return mapSummary((response as AxiosResponse).data)
+    }
+
+    loading.value = false
+
+    return null
+  }
+
   return {
     loading,
     recentlyCreatedId,
@@ -92,5 +120,6 @@ export const useSummaryStore = defineStore('summary', () => {
     clearSummaries,
     getWebsiteSummary,
     getSummaries,
+    getSummaryById,
   }
 })

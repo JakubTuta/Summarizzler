@@ -15,6 +15,7 @@ const { summaries, loading: summaryLoading, isEmpty } = storeToRefs(summaryStore
 
 const sortBy = ref<'favorites' | 'likes' | 'date' | null>(null)
 const privacyStatus = ref<'true' | 'false' | 'all' | null>(null)
+const contentType = ref<'text' | 'website' | 'pdf' | 'video' | null>(null)
 
 const summaryAmount = 4
 const firstLoadSummaryAmount = 2 * summaryAmount
@@ -31,6 +32,13 @@ const privacyItems = [
   { title: 'Private', value: 'true' },
 ]
 
+const contentItems = [
+  { title: 'Text', value: 'text' },
+  { title: 'Website', value: 'website' },
+  { title: 'PDF', value: 'pdf' },
+  { title: 'Video', value: 'video' },
+]
+
 onMounted(async () => {
   await userStore.getUser()
 
@@ -38,44 +46,76 @@ onMounted(async () => {
     return
   }
 
-  const querySortBy = route.query.sortBy as 'favorites' | 'likes' | 'date' || 'date'
+  const querySortBy = route.query.sortBy as 'favorites' | 'likes' | 'date' || 'favorites'
   const queryPrivacyStatus = route.query.privacyStatus as 'true' | 'false' | 'all' || 'all'
+  const queryContentType = route.query.contentType as 'text' | 'website' | 'pdf' | 'video' || null
 
   sortBy.value = querySortBy
   privacyStatus.value = queryPrivacyStatus
+  contentType.value = queryContentType
 
-  loadSummaries(firstLoadSummaryAmount, queryPrivacyStatus, querySortBy)
+  summaryStore.clearSummaries()
+  loadSummaries(firstLoadSummaryAmount, queryPrivacyStatus, querySortBy, queryContentType)
 
-  router.replace({ query: { sortBy: sortBy.value } })
+  router.replace({
+    query: {
+      sortBy: sortBy.value,
+      privacyStatus: privacyStatus.value,
+      contentType: contentType.value,
+    },
+  })
 })
 
-function loadSummaries(amount: number, privacyStatus: 'true' | 'false' | 'all' | null, sortBy: 'favorites' | 'likes' | 'date' | null) {
+watch(sortBy, (newValue, oldValue) => {
+  if (!newValue || oldValue === null || !privacyStatus.value || summaryLoading.value) {
+    return
+  }
+
+  summaryStore.clearSummaries()
+  loadSummaries(summaryAmount, privacyStatus.value, newValue, contentType.value)
+  router.replace({ query: { sortBy: newValue } })
+})
+
+watch(privacyStatus, (newValue, oldValue) => {
+  if (!newValue || oldValue === null || !sortBy.value || summaryLoading.value) {
+    return
+  }
+
+  summaryStore.clearSummaries()
+  loadSummaries(summaryAmount, newValue, sortBy.value, contentType.value)
+  router.replace({ query: { privacyStatus: newValue } })
+})
+
+watch(contentType, (newValue, oldValue) => {
+  if (!newValue || oldValue === null || !sortBy.value || summaryLoading.value) {
+    return
+  }
+
+  summaryStore.clearSummaries()
+  loadSummaries(summaryAmount, privacyStatus.value, sortBy.value, newValue)
+  router.replace({ query: { contentType: newValue } })
+})
+
+function loadSummaries(amount: number, privacyStatus: 'true' | 'false' | 'all' | null, sortBy: 'favorites' | 'likes' | 'date' | null, contentType: 'text' | 'website' | 'pdf' | 'video' | null) {
   if (!privacyStatus || !sortBy || summaryLoading.value) {
     return
   }
 
-  summaryStore.getSummaries(amount, privacyStatus, true, sortBy)
+  summaryStore.getSummaries(amount, privacyStatus, true, sortBy, contentType)
 }
 
-watch(sortBy, (newValue) => {
-  if (!newValue || !privacyStatus.value || summaryLoading.value || !summaries.value.length) {
-    return
+function getChipColor(contentType: string) {
+  switch (contentType) {
+    case 'text':
+      return 'secondary'
+    case 'website':
+      return 'success'
+    case 'pdf':
+      return 'warning'
+    case 'video':
+      return 'primary'
   }
-
-  summaryStore.clearSummaries()
-  loadSummaries(summaryAmount, privacyStatus.value, newValue)
-  router.replace({ query: { sortBy: newValue } })
-})
-
-watch(privacyStatus, (newValue) => {
-  if (!newValue || !sortBy.value || summaryLoading.value || !summaries.value.length) {
-    return
-  }
-
-  summaryStore.clearSummaries()
-  loadSummaries(summaryAmount, newValue, sortBy.value)
-  router.replace({ query: { privacyStatus: newValue } })
-})
+}
 </script>
 
 <template>
@@ -84,7 +124,7 @@ watch(privacyStatus, (newValue) => {
       v-if="userLoading"
       max-width="400"
     >
-      <v-card-title>
+      <v-card-title class="text-h5">
         Loading user profile...
       </v-card-title>
 
@@ -95,13 +135,8 @@ watch(privacyStatus, (newValue) => {
       </v-card-text>
     </v-card>
 
-    <v-card
-      v-else
-      :style="`max-height: ${mobile
-        ? 80
-        : 90}vh; overflow-y: auto`"
-    >
-      <v-card-title>
+    <v-card v-else>
+      <v-card-title class="text-h5">
         Your panel
       </v-card-title>
 
@@ -109,6 +144,17 @@ watch(privacyStatus, (newValue) => {
         <v-row
           class="align-center my-1 flex justify-end"
         >
+          <v-col
+            cols="12"
+            md="3"
+          >
+            <v-select
+              v-model="contentType"
+              :items="contentItems"
+              label="Content type"
+            />
+          </v-col>
+
           <v-col
             cols="12"
             md="3"
@@ -133,7 +179,11 @@ watch(privacyStatus, (newValue) => {
         </v-row>
       </v-card-subtitle>
 
-      <v-card-text>
+      <v-card-text
+        :style="`max-height: ${mobile
+          ? 45
+          : 65}vh; overflow-y: auto`"
+      >
         <v-row v-if="summaries.length">
           <v-col
             v-for="summary in summaries"
@@ -141,6 +191,7 @@ watch(privacyStatus, (newValue) => {
             cols="12"
             md="4"
             lg="3"
+            align="center"
           >
             <v-card
               class="my-3"
@@ -148,6 +199,7 @@ watch(privacyStatus, (newValue) => {
               height="230"
               elevation="24"
               :to="`/summary/${summary.id}`"
+              align="start"
             >
               <v-card-title>
                 {{ summary.title }}
@@ -159,6 +211,10 @@ watch(privacyStatus, (newValue) => {
                   color="error"
                 >
                   Private
+
+                  <v-icon class="ml-1">
+                    mdi-lock-outline
+                  </v-icon>
                 </v-chip>
 
                 <v-chip
@@ -166,6 +222,17 @@ watch(privacyStatus, (newValue) => {
                   color="success"
                 >
                   Public
+
+                  <v-icon class="ml-1">
+                    mdi-lock-open-outline
+                  </v-icon>
+                </v-chip>
+
+                <v-chip
+                  class="ml-2"
+                  :color="getChipColor(summary.contentType)"
+                >
+                  {{ contentItems.find((item) => item.value === summary.contentType)?.title || '' }}
                 </v-chip>
               </v-card-subtitle>
 
@@ -208,7 +275,7 @@ watch(privacyStatus, (newValue) => {
 
                 <span
                   class="text-info"
-                  style="position: absolute; right: 10px; bottom: 10px;"
+                  style="position: absolute; right: 15px; bottom: 10px;"
                 >
                   Read more
                 </span>
@@ -239,7 +306,7 @@ watch(privacyStatus, (newValue) => {
           :disabled="isEmpty || summaryLoading"
           class="mt-4"
           color="primary"
-          @click="() => loadSummaries(summaryAmount, privacyStatus, sortBy)"
+          @click="() => loadSummaries(summaryAmount, privacyStatus, sortBy, contentType)"
         >
           Load more
         </v-btn>

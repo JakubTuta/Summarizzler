@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 
@@ -16,6 +17,7 @@ class Summary(models.Model):
     likes = models.IntegerField(default=0)
     dislikes = models.IntegerField(default=0)
     favorites = models.IntegerField(default=0)
+    tags = ArrayField(models.CharField(max_length=20, blank=True), default=list)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

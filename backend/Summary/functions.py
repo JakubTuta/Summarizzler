@@ -4,7 +4,9 @@ import typing
 from bs4 import BeautifulSoup
 from django.db.models.manager import BaseManager
 from django.http import QueryDict
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_google_genai import ChatGoogleGenerativeAI
 from playwright.sync_api import sync_playwright
 
@@ -40,6 +42,7 @@ def get_langchain_template(content_type: str) -> str:
         case "website":
             return (
                 "You are tasked with extracting specific information from the following text content: {dom_content}. "
+                "Format the response in this JSON format: {format_instructions}. "
                 "Please follow these instructions carefully: \n\n"
                 "1. **Extract Information:** Only extract the information that directly matches the provided description: {user_prompt}. "
                 "2. **No Extra Content:** Do not include any additional text, comments, or explanations in your response. "
@@ -68,13 +71,10 @@ def sort_summaries(
 def filter_by_start_after(
     summaries: BaseManager[models.Summary], start_after: typing.Optional[str], sort: str
 ) -> BaseManager[models.Summary]:
-    print(start_after)
-    print(sort)
     if start_after is None:
         return summaries
 
     if (summary := get_summary_by_id(start_after)) is not None:
-        print(summary)
         match sort:
             case "date":
                 summaries = summaries.filter(
@@ -99,6 +99,31 @@ def get_summary_by_id(summary_id: str) -> typing.Optional[models.Summary]:
         return summary
     except models.Summary.DoesNotExist:
         return None
+
+
+categories = [
+    "technology",
+    "business",
+    "health & wellness",
+    "education",
+    "lifestyle",
+    "entertainment",
+    "science",
+    "politics",
+    "art & culture",
+    "sports",
+    "food & drink",
+    "travel",
+    "other",
+]
+
+
+class BotResponse(BaseModel):
+    content: str = Field(description="The answer to the user's query")
+    tags: typing.List[str] = Field(description="Max 5 tags for the summary")
+    category: str = Field(
+        description=f"The category of the content. Choose one from the list: [{', '.join(categories)}]"
+    )
 
 
 class Website:
@@ -156,7 +181,7 @@ class Website:
         return None
 
     @staticmethod
-    def ask_bot(content: str, user_prompt: str) -> str:
+    def ask_bot(content: str, user_prompt: str) -> dict[str, str]:
         api_key = os.environ.get("GEMINI_API_KEY")
 
         model = ChatGoogleGenerativeAI(
@@ -168,10 +193,22 @@ class Website:
             max_retries=2,
         )
 
+        parser = JsonOutputParser(pydantic_object=BotResponse)
         template = get_langchain_template(Website.content_type)
-        prompt = ChatPromptTemplate.from_template(template)
-        chain = prompt | model
+
+        prompt = PromptTemplate(
+            template=template,
+            input_variables=["dom_content", "user_prompt"],
+            partial_variables={"format_instructions": parser.get_format_instructions()},
+        )
+
+        chain = prompt | model | parser
 
         response = chain.invoke({"dom_content": content, "user_prompt": user_prompt})
 
-        return str(response.content)
+        for category in categories:
+            if response["category"] in category:
+                response["category"] = category
+                break
+
+        return response

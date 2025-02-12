@@ -19,6 +19,7 @@ class SummarySerializer(serializers.ModelSerializer):
             "likes",
             "dislikes",
             "favorites",
+            "tags",
             "created_at",
         )
 
