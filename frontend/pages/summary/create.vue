@@ -24,6 +24,10 @@ const tabs = [
     value: 'website',
   },
   {
+    title: 'Text',
+    value: 'text',
+  },
+  {
     title: 'File',
     value: 'file',
   },
@@ -48,6 +52,8 @@ const tabs = [
     </v-tabs>
 
     <CreateWebsite v-if="selectedTab === 'website'" />
+
+    <CreateText v-else-if="selectedTab === 'text'" />
 
     <CreateFile v-else-if="selectedTab === 'file'" />
   </v-container>

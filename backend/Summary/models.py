@@ -3,22 +3,39 @@ from django.db import models
 
 
 class Summary(models.Model):
-    url = models.TextField()
-    title = models.TextField()
-    content_type = models.CharField(max_length=10)
-    summary = models.TextField()
+    # required
+    title = models.TextField(default="")
+    summary = models.TextField(default="")
     author = models.ForeignKey(
         "Users.UserData",
         on_delete=models.CASCADE,
         related_name="summaries",
     )
-    user_prompt = models.TextField()
-    is_private = models.BooleanField(default=False)
-    likes = models.IntegerField(default=0)
-    dislikes = models.IntegerField(default=0)
-    favorites = models.IntegerField(default=0)
-    tags = ArrayField(models.CharField(max_length=20, blank=True), default=list)
-    created_at = models.DateTimeField(auto_now_add=True)
+    category = models.CharField(
+        max_length=20, default=""
+    )  # technology, business, health & wellness, education, lifestyle, entertainment, science, politics, art & culture, sports, food & drink, travel, other,
+    content_type = models.CharField(
+        max_length=10, default=""
+    )  # text, website, pdf, video
+    user_prompt = models.TextField(default="")
+
+    # not required
+    likes = models.IntegerField(default=0, blank=True)
+    dislikes = models.IntegerField(default=0, blank=True)
+    favorites = models.IntegerField(default=0, blank=True)
+    tags = ArrayField(
+        models.CharField(max_length=20, blank=True), default=list, blank=True
+    )
+    is_private = models.BooleanField(default=False, blank=True)
+
+    # website
+    url = models.TextField(blank=True, default="")
+
+    # text
+    raw_text = models.CharField(max_length=10000, blank=True, default="")
+
+    # Auto-generated
+    created_at = models.DateTimeField(auto_now_add=True, blank=True)
 
     def __str__(self):
         return self.title

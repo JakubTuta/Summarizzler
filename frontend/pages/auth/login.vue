@@ -32,7 +32,7 @@ async function login() {
     </v-btn>
 
     <v-card max-width="600px">
-      <v-card-title class="text-h5">
+      <v-card-title class="text-h4">
         Login
       </v-card-title>
 

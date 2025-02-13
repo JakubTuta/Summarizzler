@@ -18,7 +18,7 @@ export const useSummaryStore = defineStore('summary', () => {
     isEmpty.value = false
   }
 
-  const getWebsiteSummary = async (userUrl: string, userPrompt: string, isPrivate: boolean) => {
+  const createWebsiteSummary = async (userUrl: string, userPrompt: string, isPrivate: boolean) => {
     recentlyCreatedId.value = null
     recentlyError.value = null
     const url = '/summary/website/'
@@ -51,24 +51,74 @@ export const useSummaryStore = defineStore('summary', () => {
     return null
   }
 
-  const getSummaries = async (
-    limit: number = 10,
-    privateParam: 'all' | 'true' | 'false' = 'all',
-    meOnly: boolean = false,
-    sort: 'favorites' | 'likes' | 'date' = 'date',
-    contentType: 'text' | 'website' | 'pdf' | 'video' | null = null,
-  ) => {
+  const createTextSummary = async (userText: string, userPrompt: string, isPrivate: boolean) => {
+    recentlyCreatedId.value = null
+    recentlyError.value = null
+    const url = '/summary/text/'
+    const data = { text: userText, prompt: userPrompt, private: isPrivate }
+
     loading.value = true
-    let url = `/summary/?limit=${limit}&private=${privateParam}&me=${meOnly}&sort=${sort}`
+
+    const response = await apiStore.sendRequest({
+      url,
+      method: 'POST',
+      data,
+    })
+
+    if (apiStore.isResponseOk(response)) {
+      const responseObject = response as AxiosResponse
+      const createdId = responseObject.data.id
+      recentlyCreatedId.value = createdId
+      loading.value = false
+
+      return createdId
+    }
+    else if (response instanceof AxiosError) {
+      const responseObject = response as AxiosError
+      // @ts-expect-error message
+      recentlyError.value = responseObject.response?.data?.message || 'An error occurred'
+    }
+
+    loading.value = false
+
+    return null
+  }
+
+  const getSummaries = async (
+    {
+      limit = 10,
+      privateParam = null,
+      meOnly = false,
+      sort = 'date',
+      contentType = null,
+      category = null,
+    }: {
+      limit: number
+      privateParam: boolean | null
+      meOnly: boolean
+      sort: 'favorites' | 'likes' | 'date'
+      contentType: 'text' | 'website' | 'pdf' | 'video' | null
+      category: string | null
+    }) => {
+    let url = `/summary/?limit=${limit}&me=${meOnly}&sort=${sort}`
 
     if (lastLoadedObject.value) {
       url += `&startAfter=${lastLoadedObject.value.id}`
+    }
+
+    if (privateParam !== null) {
+      url += `&private=${privateParam}`
     }
 
     if (contentType) {
       url += `&contentType=${contentType}`
     }
 
+    if (category) {
+      url += `&category=${category}`
+    }
+
+    loading.value = true
     const response = await apiStore.sendRequest({ url, method: 'GET' })
 
     if (apiStore.isResponseOk(response)) {
@@ -118,7 +168,8 @@ export const useSummaryStore = defineStore('summary', () => {
     summaries,
     isEmpty,
     clearSummaries,
-    getWebsiteSummary,
+    createWebsiteSummary,
+    createTextSummary,
     getSummaries,
     getSummaryById,
   }

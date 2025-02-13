@@ -4,7 +4,7 @@ import { useDisplay } from 'vuetify';
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
 
-const { mobile } = useDisplay()
+const { mobile, smAndDown } = useDisplay()
 
 const search = ref('')
 </script>
@@ -15,7 +15,7 @@ const search = ref('')
     rounded
     style="display: flex; align-items: center;"
   >
-    <div>
+    <div class="ml-3">
       <v-btn
         :to="user
           ? '/panel'
@@ -32,7 +32,7 @@ const search = ref('')
         variant="text"
         to="/discover"
         color="secondary"
-        class="z-1 ml-2"
+        class="z-1 ml-3"
       >
         Discover
       </v-btn>
@@ -47,13 +47,15 @@ const search = ref('')
         hide-details
         density="comfortable"
         rounded
-        max-width="500"
+        :max-width="smAndDown
+          ? '300px'
+          : '400px'"
       />
     </div>
 
     <div
       v-if="!user"
-      class="ml-auto"
+      class="ml-auto mr-3"
     >
       <v-btn
         variant="text"
@@ -66,7 +68,7 @@ const search = ref('')
       </v-btn>
 
       <v-btn
-        class="z-1 ml-2"
+        class="z-1 ml-3"
         variant="text"
         to="/auth/register"
         color="primary"
@@ -78,7 +80,7 @@ const search = ref('')
 
     <div
       v-else
-      class="ml-auto"
+      class="ml-auto mr-3"
     >
       <v-btn
         class="z-1"
@@ -91,7 +93,7 @@ const search = ref('')
       </v-btn>
 
       <v-btn
-        class="z-1 ml-2"
+        class="z-1 ml-3"
         variant="text"
         to="/auth/logout"
         color="primary"
@@ -138,7 +140,7 @@ const search = ref('')
             variant="text"
             to="/discover"
             color="secondary"
-            class="ml-2"
+            class="ml-3"
           >
             Discover
           </v-btn>
@@ -161,7 +163,7 @@ const search = ref('')
             to="/auth/register"
             color="primary"
             prepend-icon="mdi-account-plus"
-            class="ml-2"
+            class="ml-3"
           >
             Register
           </v-btn>

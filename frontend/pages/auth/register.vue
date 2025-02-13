@@ -34,7 +34,7 @@ async function register() {
     </v-btn>
 
     <v-card max-width="600px">
-      <v-card-title class="text-h5">
+      <v-card-title class="text-h4">
         Register
       </v-card-title>
 

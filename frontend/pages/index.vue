@@ -6,7 +6,14 @@ const summariesPerPage = 8
 
 onMounted(async () => {
   summaryStore.clearSummaries()
-  await summaryStore.getSummaries(summariesPerPage, 'false', false, 'favorites')
+  await summaryStore.getSummaries({
+    limit: summariesPerPage,
+    privateParam: false,
+    meOnly: false,
+    sort: 'favorites',
+    contentType: null,
+    category: null,
+  })
 })
 </script>
 
@@ -17,12 +24,14 @@ onMounted(async () => {
         v-for="i in summariesPerPage"
         :key="i"
         cols="12"
+        sm="6"
         md="4"
         lg="3"
       >
         <v-skeleton-loader
           class="mx-auto"
           max-width="400"
+          height="230"
           type="card"
         />
       </v-col>
@@ -33,13 +42,14 @@ onMounted(async () => {
         v-for="summary in summaries"
         :key="summary.id"
         cols="12"
+        sm="6"
         md="4"
         lg="3"
       >
         <v-card
           class="my-2"
           max-width="400"
-          height="200"
+          height="230"
           :to="`/summary/${summary.id}`"
         >
           <v-card-title>
@@ -63,7 +73,7 @@ onMounted(async () => {
           </v-card-subtitle>
 
           <v-card-text>
-            {{ summary.summary.substring(0, 100) }}...
+            {{ summary.summary.substring(0, 80) }}...
           </v-card-text>
 
           <v-card-actions>

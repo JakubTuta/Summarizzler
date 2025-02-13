@@ -9,18 +9,20 @@ class SummarySerializer(serializers.ModelSerializer):
         model = models.Summary
         fields = (
             "id",
-            "url",
             "title",
-            "content_type",
             "summary",
             "author",
+            "category",
+            "content_type",
             "user_prompt",
-            "is_private",
             "likes",
             "dislikes",
             "favorites",
             "tags",
             "created_at",
+            "is_private",
+            "url",
+            "raw_text",
         )
 
     def create(self, validated_data):

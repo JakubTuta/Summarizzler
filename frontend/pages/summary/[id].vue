@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import DOMPurify from 'dompurify'
 import { useDisplay } from 'vuetify'
+import { getCategory, getCategoryColor } from '~/helpers/categories'
+import { getContentType, getContentTypeColor } from '~/helpers/contentTypes'
 import type { ISummary } from '~/models/summary'
 
 const route = useRoute()
@@ -8,16 +10,12 @@ const { mobile } = useDisplay()
 
 const summaryStore = useSummaryStore()
 
+const userStore = useUserStore()
+const { user } = storeToRefs(userStore)
+
 const summaryId = ref<string | null>(null)
 const summary = ref<ISummary | null>(null)
 const isAuthError = ref(false)
-
-const contentItems = [
-  { title: 'Text', value: 'text' },
-  { title: 'Website', value: 'website' },
-  { title: 'PDF', value: 'pdf' },
-  { title: 'Video', value: 'video' },
-]
 
 onMounted(async () => {
   const paramsData = route.params as { id: string }
@@ -33,27 +31,12 @@ onMounted(async () => {
   }
 })
 
-function getChipColor(contentType: string) {
-  switch (contentType) {
-    case 'text':
-      return 'secondary'
-    case 'website':
-      return 'success'
-    case 'pdf':
-      return 'warning'
-    case 'video':
-      return 'primary'
-  }
-}
-
-function formatTime(time: string) {
-  const date = new Date(time)
-
-  const day = date.getDate()
-  const month = date.getMonth() + 1
-  const year = date.getFullYear()
-  const hours = date.getHours()
-  const minutes = date.getMinutes()
+function formatTime(date: Date) {
+  const day = date.getDate().toString().padStart(2, '0')
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const year = date.getFullYear().toString().padStart(4, '0')
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
 
   return `${day}.${month}.${year} ${hours}:${minutes}`
 }
@@ -73,7 +56,7 @@ function formatTime(time: string) {
     </v-card>
 
     <v-card v-else-if="summary">
-      <v-card-title class="text-h5">
+      <v-card-title class="text-h4">
         {{ summary.title }}
       </v-card-title>
 
@@ -90,22 +73,50 @@ function formatTime(time: string) {
               ? 2
               : 1"
           >
-            <v-col cols="12">
-              Content type:
+            <v-col
+              v-if="summary.contentType"
+              cols="12"
+            >
+              <span class="font-weight-bold">
+                Content type:
+              </span>
+
               <v-chip
                 class="ml-2"
-                :color="getChipColor(summary.contentType)"
+                :color="getContentTypeColor(summary.contentType)"
               >
-                {{ contentItems.find((item) => item.value === summary!.contentType)?.title || '' }}
+                {{ getContentType(summary.contentType)?.title || '' }}
               </v-chip>
             </v-col>
 
-            <v-col cols="12">
-              Tags:
+            <v-col
+              v-if="summary.category"
+              cols="12"
+            >
+              <span class="font-weight-bold">
+                Category:
+              </span>
+
+              <v-chip
+                :color="getCategoryColor(summary.category)"
+                class="my-2 ml-2"
+              >
+                {{ getCategory(summary.category)?.title || '' }}
+              </v-chip>
+            </v-col>
+
+            <v-col
+              v-if="summary.tags?.length"
+              cols="12"
+            >
+              <span class="font-weight-bold">
+                Tags:
+              </span>
+
               <v-chip
                 v-for="tag in summary.tags"
                 :key="tag"
-                color="primary"
+                color="secondary"
                 class="my-2 ml-2"
               >
                 {{ tag }}
@@ -121,20 +132,101 @@ function formatTime(time: string) {
               : 2"
           >
             <v-col cols="12">
-              User prompt: {{ summary.userPrompt }}
+              <span class="font-weight-bold">
+                User prompt:
+              </span>
+              {{ summary.userPrompt }}
             </v-col>
 
             <v-col
               v-if="summary.contentType === 'website' && summary.url"
               cols="12"
             >
-              Original:
+              <span class="font-weight-bold">
+                Original:
+              </span>
+
               <NuxtLink
                 :to="summary.url"
                 external
               >
                 {{ summary.url }}
               </NuxtLink>
+            </v-col>
+
+            <v-col cols="12">
+              <v-btn
+                variant="flat"
+                rounded="circle"
+                icon
+                size="large"
+              >
+                <v-tooltip
+                  location="bottom"
+                  activator="parent"
+                >
+                  {{ user
+                    ? 'Soon...'
+                    : 'Login to favorite' }}
+                </v-tooltip>
+
+                <v-icon
+                  color="yellow"
+                  class="mr-2"
+                >
+                  mdi-star
+                </v-icon>
+                {{ summary.favorites }}
+              </v-btn>
+
+              <v-btn
+                variant="flat"
+                rounded="circle"
+                icon
+                size="large"
+                class="mx-10"
+              >
+                <v-tooltip
+                  location="bottom"
+                  activator="parent"
+                >
+                  {{ user
+                    ? 'Soon...'
+                    : 'Login to like' }}
+                </v-tooltip>
+
+                <v-icon
+                  color="success"
+                  class="mr-2"
+                >
+                  mdi-thumb-up
+                </v-icon>
+                {{ summary.likes }}
+              </v-btn>
+
+              <v-btn
+                variant="flat"
+                rounded="circle"
+                icon
+                size="large"
+              >
+                <v-tooltip
+                  location="bottom"
+                  activator="parent"
+                >
+                  {{ user
+                    ? 'Soon...'
+                    : 'Login to dislike' }}
+                </v-tooltip>
+
+                <v-icon
+                  color="error"
+                  class="mr-2"
+                >
+                  mdi-thumb-up
+                </v-icon>
+                {{ summary.dislikes }}
+              </v-btn>
             </v-col>
           </v-col>
         </v-row>

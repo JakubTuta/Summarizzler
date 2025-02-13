@@ -1,6 +1,6 @@
 {
   "name": "ai-summarizer",
-  "packageManager": "pnpm@9.5.0",
+  "packageManager": "bun@1.2.2",
   "private": true,
   "type": "module",
   "scripts": {

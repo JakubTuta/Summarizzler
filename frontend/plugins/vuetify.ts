@@ -68,7 +68,7 @@ export default defineNuxtPlugin((app) => {
       },
     },
     display: {
-      mobileBreakpoint: 900,
+      mobileBreakpoint: 'sm',
     },
   })
   app.vueApp.use(vuetify)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const url = ref('')
+const text = ref('')
 const userPrompt = ref('')
 const isPrivate = ref(false)
 const isShowDialog = ref(false)
@@ -10,7 +10,7 @@ const summaryStore = useSummaryStore()
 
 async function send() {
   if (await isValid()) {
-    summaryStore.createWebsiteSummary(url.value, userPrompt.value, isPrivate.value)
+    summaryStore.createTextSummary(text.value, userPrompt.value, isPrivate.value)
     isShowDialog.value = true
   }
 }
@@ -19,7 +19,7 @@ async function send() {
 <template>
   <v-card>
     <v-card-title>
-      Summarize a website
+      Summarize a text
     </v-card-title>
 
     <v-form
@@ -28,11 +28,17 @@ async function send() {
       @submit.prevent="send"
     >
       <v-card-text>
-        <v-text-field
-          v-model="url"
-          class="mt-4"
-          label="Url"
-          :rules="[requiredRule('URL')]"
+        <v-textarea
+          v-model="text"
+          label="Text"
+          auto-grow
+          no-resize
+          rows="2"
+          counter="10000"
+          :rules="[
+            requiredRule('Text'),
+            maxLengthRule(10000),
+          ]"
           @keydown.enter="send"
         />
 
@@ -43,7 +49,7 @@ async function send() {
           auto-grow
           no-resize
           rows="1"
-          hint="What would You like to get from this website? e.g. summary, main points, etc."
+          hint="What would You like to get from this text? e.g. summary, main points, etc."
           persistent-hint
           :rules="[requiredRule('User prompt')]"
           @keydown.enter="send"
@@ -65,12 +71,12 @@ async function send() {
         <v-btn
           class="mt-2"
           type="submit"
-          :color="url && userPrompt
+          :color="text && userPrompt
             ? 'primary'
             : 'grey'"
         >
           <v-tooltip
-            v-if="!url || !userPrompt"
+            v-if="!text || !userPrompt"
             location="bottom"
             activator="parent"
           >

@@ -92,6 +92,65 @@ class Website(APIView):
         )
 
 
+class Text(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        user = request.user  # type: ignore
+        if (user_data := users_functions.find_user_data(user=user)) is None:
+            return Response(
+                {"message": "User data not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        request_data = request.data  # type: ignore
+        required_fields = ["text", "prompt"]
+
+        missing_fields = functions.check_required_fields(request_data, required_fields)
+
+        if missing_fields:
+            return Response(
+                {"message": f"Missing fields: {', '.join(missing_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        input_text = request_data["text"]
+        user_prompt = request_data["prompt"]
+
+        bot_response = functions.Text.ask_bot(input_text, user_prompt)
+
+        data = {
+            "title": bot_response["title"],
+            "content_type": functions.Text.content_type,
+            "summary": bot_response["content"],
+            "author": user_data,
+            "user_prompt": user_prompt,
+            "is_private": request_data.get("private", False),
+            "tags": bot_response["tags"],
+            "category": bot_response["category"],
+            "raw_text": input_text,
+        }
+
+        try:
+            summary = functions.create_summary(data)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if summary is None:
+            return Response(
+                {"message": "Failed to create summary"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                "id": summary.id,  # type: ignore
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 class SummaryList(APIView):
     permission_classes = [AllowAny]
     authentication_classes = [JWTAuthentication]
@@ -110,24 +169,28 @@ class SummaryList(APIView):
 
         sort_param = query_params.get("sort", "date")
         start_after_id = query_params.get("startAfter", None)
+        content_type = query_params.get("contentType", None)
+        category = query_params.get("category", None)
 
         summaries: BaseManager[models.Summary] = models.Summary.objects.all()
         summaries = functions.sort_summaries(summaries, sort_param)
         summaries = functions.filter_by_start_after(
             summaries, start_after_id, sort_param
         )
+        summaries = functions.filter_by_content_type(summaries, content_type)
+        summaries = functions.filter_by_category(summaries, category)
 
         if request.user.is_authenticated and (user := users_functions.find_user_data(user=request.user)) is not None:  # type: ignore
             me_param = query_params.get("me", "false")
-            private_param = query_params.get("private", "all")
+            private_param = query_params.get("private", None)
 
-            if me_param == "true":
+            if me_param.lower() == "true":
                 summaries = summaries.filter(author=user)
 
-            if private_param == "true":
+            if private_param is not None and private_param.lower() == "true":
                 summaries = summaries.filter(author=user, is_private=True)
 
-            elif private_param == "false":
+            elif private_param is not None and private_param.lower() == "false":
                 summaries = summaries.filter(is_private=False)
 
         else:
