@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { getContentType, getContentTypeColor } from '~/helpers/contentTypes';
-import type { ISummary } from '~/models/summary';
+import type { ISummaryPreview } from '~/models/summaryPreview';
 
-const props = defineProps < { summary: ISummary } > ()
+const props = defineProps < { summary: ISummaryPreview } > ()
 
 const { summary } = toRefs(props)
 </script>

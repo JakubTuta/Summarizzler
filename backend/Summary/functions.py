@@ -264,3 +264,39 @@ class Text:
                 break
 
         return response
+
+
+class File:
+    content_type = "file"
+
+    @staticmethod
+    def process_file_content(file_content: str, user_prompt: str) -> dict[str, str]:
+        model = ChatGoogleGenerativeAI(
+            api_key=get_api_key(),  # type: ignore
+            model="gemini-2.0-flash",
+            temperature=0,
+            max_tokens=None,
+            timeout=None,
+            max_retries=2,
+        )
+
+        parser = JsonOutputParser(pydantic_object=BotResponse)
+
+        prompt = PromptTemplate(
+            template=langchain_template,
+            input_variables=["dom_content", "user_prompt"],
+            partial_variables={"format_instructions": parser.get_format_instructions()},
+        )
+
+        chain = prompt | model | parser
+
+        response = chain.invoke(
+            {"dom_content": file_content, "user_prompt": user_prompt}
+        )
+
+        for category in categories:
+            if response["category"] in category:
+                response["category"] = category
+                break
+
+        return response

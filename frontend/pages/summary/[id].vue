@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import DOMPurify from 'dompurify'
+import { jsPDF } from 'jspdf'
 import { useDisplay } from 'vuetify'
 import { getCategory, getCategoryColor } from '~/helpers/categories'
 import { getContentType, getContentTypeColor } from '~/helpers/contentTypes'
@@ -39,6 +40,32 @@ function formatTime(date: Date) {
   const minutes = date.getMinutes().toString().padStart(2, '0')
 
   return `${day}.${month}.${year} ${hours}:${minutes}`
+}
+
+function generatePDF(text: string) {
+  // eslint-disable-next-line new-cap
+  const doc = new jsPDF()
+
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const margin = 10
+  const fontSize = 12
+
+  doc.setFontSize(fontSize)
+  const textWidth = pageWidth - 2 * margin
+  const splitText = doc.splitTextToSize(text, textWidth)
+
+  let y = margin
+  splitText.forEach((line: string) => {
+    if (y > pageHeight - margin) {
+      doc.addPage()
+      y = margin
+    }
+    doc.text(line, margin, y)
+    y += fontSize
+  })
+
+  doc.save(`${summary.value?.title || 'summary'}.pdf`)
 }
 </script>
 
@@ -143,7 +170,7 @@ function formatTime(date: Date) {
               cols="12"
             >
               <span class="font-weight-bold">
-                Original:
+                Url:
               </span>
 
               <NuxtLink
@@ -152,6 +179,30 @@ function formatTime(date: Date) {
               >
                 {{ summary.url }}
               </NuxtLink>
+            </v-col>
+
+            <v-col
+              v-if="(summary.contentType === 'file' || summary.contentType === 'text') && summary.rawText"
+              cols="12"
+            >
+              <v-btn
+                variant="elevated"
+                stacked
+                @click="generatePDF(summary.rawText)"
+              >
+                <template #prepend>
+                  <v-icon
+                    color="white"
+                    size="50"
+                  >
+                    mdi-file-document
+                  </v-icon>
+                </template>
+
+                <span class="font-weight-bold mt-1">
+                  Download file
+                </span>
+              </v-btn>
             </v-col>
 
             <v-col cols="12">

@@ -11,3 +11,4 @@ langchain-google-genai==2.0.9
 beautifulsoup4==4.13.3
 playwright==1.47.0
 psycopg2==2.9.10
+PyPDF2==3.0.1

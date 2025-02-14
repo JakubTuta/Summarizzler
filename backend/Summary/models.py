@@ -16,7 +16,7 @@ class Summary(models.Model):
     )  # technology, business, health & wellness, education, lifestyle, entertainment, science, politics, art & culture, sports, food & drink, travel, other,
     content_type = models.CharField(
         max_length=10, default=""
-    )  # text, website, pdf, video
+    )  # text, website, file, video
     user_prompt = models.TextField(default="")
 
     # not required
@@ -31,8 +31,8 @@ class Summary(models.Model):
     # website
     url = models.TextField(blank=True, default="")
 
-    # text
-    raw_text = models.CharField(max_length=10000, blank=True, default="")
+    # text / file
+    raw_text = models.TextField(blank=True, default="")
 
     # Auto-generated
     created_at = models.DateTimeField(auto_now_add=True, blank=True)

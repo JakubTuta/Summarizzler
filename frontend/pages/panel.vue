@@ -17,7 +17,7 @@ const { summaries, loading: summaryLoading, isEmpty } = storeToRefs(summaryStore
 
 const sortBy = ref<'favorites' | 'likes' | 'date' | null>(null)
 const privacyStatus = ref<boolean | null | undefined>(undefined)
-const contentType = ref<'text' | 'website' | 'pdf' | 'video' | null>(null)
+const contentType = ref<'text' | 'website' | 'file' | 'video' | null>(null)
 const category = ref<string | null>(null)
 
 const summaryAmount = 8
@@ -43,7 +43,7 @@ onMounted(async () => {
 
   const querySortBy = route.query.sortBy as 'favorites' | 'likes' | 'date' || 'favorites'
   const queryPrivacyStatus = route.query.private as 'true' | 'false' | null || null
-  const queryContentType = route.query.contentType as 'text' | 'website' | 'pdf' | 'video' | null || null
+  const queryContentType = route.query.contentType as 'text' | 'website' | 'file' | 'video' | null || null
   const queryCategory = route.query.category as string | null || null
 
   const isPrivate = queryPrivacyStatus !== null
@@ -90,7 +90,7 @@ function loadSummaries(
   amount: number,
   privacyStatus: boolean | null | undefined,
   sortBy: 'favorites' | 'likes' | 'date' | null,
-  contentType: 'text' | 'website' | 'pdf' | 'video' | null,
+  contentType: 'text' | 'website' | 'file' | 'video' | null,
   category: string | null,
 ) {
   if (!sortBy || privacyStatus === undefined || summaryLoading.value) {
@@ -125,7 +125,7 @@ function updateCategory(newCategory: string | null) {
   }
 }
 
-function updateContentType(newContentType: 'text' | 'website' | 'pdf' | 'video' | null) {
+function updateContentType(newContentType: 'text' | 'website' | 'file' | 'video' | null) {
   if (summaryLoading.value) {
     return
   }
@@ -186,7 +186,7 @@ function updatePrivacyStatus(newPrivacyStatus: boolean | null) {
       v-if="userLoading"
       max-width="400"
     >
-      <v-card-title class="text-h4">
+      <v-card-title class="text-h5">
         Loading user profile...
       </v-card-title>
 

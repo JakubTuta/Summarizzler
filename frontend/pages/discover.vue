@@ -11,7 +11,7 @@ const summaryStore = useSummaryStore()
 const { summaries, loading: summaryLoading, isEmpty } = storeToRefs(summaryStore)
 
 const sortBy = ref<'favorites' | 'likes' | 'date' | null>(null)
-const contentType = ref<'text' | 'website' | 'pdf' | 'video' | null>(null)
+const contentType = ref<'text' | 'website' | 'file' | 'video' | null>(null)
 const category = ref<string | null>(null)
 
 const summaryAmount = 5
@@ -24,7 +24,7 @@ const sortItems = [
 
 onMounted(() => {
   const querySortBy = route.query.sortBy as 'favorites' | 'likes' | 'date' || 'favorites'
-  const queryContentType = route.query.contentType as 'text' | 'website' | 'pdf' | 'video' | null || null
+  const queryContentType = route.query.contentType as 'text' | 'website' | 'file' | 'video' | null || null
   const queryCategory = route.query.category as string | null || null
 
   sortBy.value = querySortBy
@@ -58,7 +58,7 @@ const cardHeight = computed(() => {
 function loadSummaries(
   amount: number,
   sortBy: 'favorites' | 'likes' | 'date' | null,
-  contentType: 'text' | 'website' | 'pdf' | 'video' | null,
+  contentType: 'text' | 'website' | 'file' | 'video' | null,
   category: string | null,
 ) {
   if (!sortBy || summaryLoading.value) {
@@ -93,7 +93,7 @@ function updateCategory(newCategory: string | null) {
   }
 }
 
-function updateContentType(newContentType: 'text' | 'website' | 'pdf' | 'video' | null) {
+function updateContentType(newContentType: 'text' | 'website' | 'file' | 'video' | null) {
   if (summaryLoading.value) {
     return
   }

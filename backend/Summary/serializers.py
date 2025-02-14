@@ -28,3 +28,25 @@ class SummarySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         summary = models.Summary.objects.create(**validated_data)
         return summary
+
+
+class SummaryPreviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Summary
+        fields = (
+            "id",
+            "title",
+            "summary",
+            "author",
+            "category",
+            "content_type",
+            # "user_prompt",
+            "likes",
+            # "dislikes",
+            "favorites",
+            # "tags",
+            "created_at",
+            "is_private",
+            # "url",
+            # "raw_text",
+        )

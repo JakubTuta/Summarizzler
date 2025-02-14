@@ -7,12 +7,14 @@ export const useApiStore = defineStore('api', () => {
   const runtimeConfig = useRuntimeConfig()
   const baseURL = runtimeConfig.public.serverUrl
 
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
+  }
+
   const api = axios.create({
     baseURL,
-    headers: {
-      'Content-Type': 'application/json',
-    },
     responseType: 'json',
+    headers: defaultHeaders,
   })
 
   api.interceptors.request.use((config) => {
@@ -28,21 +30,23 @@ export const useApiStore = defineStore('api', () => {
   })
 
   const sendRequest = async (
-    { url, method, data }:
-    { url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE', data?: any },
+    { url, method, data, headers = null }:
+    { url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE', data?: any, headers?: any },
   ): Promise<AxiosResponse | AxiosError | null> => {
     let response: AxiosResponse | null = null
+
+    const requestHeaders = headers || defaultHeaders
 
     try {
       switch (method) {
         case 'GET':
-          response = await api.get(url)
+          response = await api.get(url, { headers: requestHeaders })
           break
         case 'POST':
-          response = await api.post(url, data)
+          response = await api.post(url, data, { headers: requestHeaders })
           break
         case 'PUT':
-          response = await api.put(url, data)
+          response = await api.put(url, data, { headers: requestHeaders })
           break
         default:
           break

@@ -1,9 +1,15 @@
+import io
+import os
+
 import Users.functions as users_functions
 import Users.serializers as users_serializers
 from django.contrib.auth.models import User
+from django.core.files.storage import default_storage
 from django.db.models.manager import BaseManager
 from django.http import HttpRequest
+from PyPDF2 import PdfReader
 from rest_framework import status
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,18 +18,11 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from . import functions, models, serializers
 
 
-class Website(APIView):
+class WebsiteView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
     def post(self, request: HttpRequest) -> Response:
-        user: User = request.user  # type: ignore
-        if (user_data := users_functions.find_user_data(user=user)) is None:
-            return Response(
-                {"message": "User data not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
         request_data = request.data  # type: ignore
         required_fields = ["url", "prompt"]
 
@@ -37,6 +36,7 @@ class Website(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        user: User = request.user  # type: ignore
         url = request_data["url"]
         user_prompt = request_data["prompt"]
 
@@ -66,7 +66,7 @@ class Website(APIView):
             "title": title,
             "content_type": functions.Website.content_type,
             "summary": bot_response["content"],
-            "author": user_data,
+            "author": user,
             "user_prompt": user_prompt,
             "is_private": request_data.get("private", False),
             "tags": bot_response["tags"],
@@ -92,18 +92,11 @@ class Website(APIView):
         )
 
 
-class Text(APIView):
+class TextView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
     def post(self, request):
-        user = request.user  # type: ignore
-        if (user_data := users_functions.find_user_data(user=user)) is None:
-            return Response(
-                {"message": "User data not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
         request_data = request.data  # type: ignore
         required_fields = ["text", "prompt"]
 
@@ -115,6 +108,7 @@ class Text(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        user = request.user  # type: ignore
         input_text = request_data["text"]
         user_prompt = request_data["prompt"]
 
@@ -124,7 +118,7 @@ class Text(APIView):
             "title": bot_response["title"],
             "content_type": functions.Text.content_type,
             "summary": bot_response["content"],
-            "author": user_data,
+            "author": user,
             "user_prompt": user_prompt,
             "is_private": request_data.get("private", False),
             "tags": bot_response["tags"],
@@ -149,6 +143,90 @@ class Text(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class FileView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request: HttpRequest) -> Response:
+        required_fields = ["prompt"]
+        request_data = request.data  # type: ignore
+
+        if len(
+            missing_fields := functions.check_required_fields(
+                request_data, required_fields
+            )
+        ):
+            return Response(
+                {"message": f"Missing fields: {', '.join(missing_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user: User = request.user  # type: ignore
+        file = request.FILES.get("file")
+        prompt = request_data.get("prompt")
+        is_private = request_data.get("private", False)
+
+        if not file:
+            return Response(
+                {"message": "No file uploaded"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not file.name.endswith(".pdf"):
+            return Response(
+                {"message": "Invalid file type. Only PDF files are supported."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            file_content = ""
+            pdf_reader = PdfReader(io.BytesIO(file.read()))
+            for page in pdf_reader.pages:
+                file_content += page.extract_text()
+
+            file_content = file_content.strip()
+
+            bot_response = functions.File.process_file_content(file_content, prompt)
+
+            data = {
+                "title": file.name.split(".pdf")[0],
+                "content_type": functions.File.content_type,
+                "summary": bot_response["content"],
+                "author": user,
+                "user_prompt": prompt,
+                "is_private": is_private,
+                "tags": bot_response["tags"],
+                "category": bot_response["category"],
+                "raw_text": file_content,
+            }
+
+            try:
+                summary = functions.create_summary(data)
+            except Exception as e:
+                return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+            if summary is None:
+                return Response(
+                    {"message": "Failed to create summary"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            return Response(
+                {
+                    "id": summary.id,  # type: ignore
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            print(e)
+            return Response(
+                {"message": f"Error processing file: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class SummaryList(APIView):
@@ -180,7 +258,7 @@ class SummaryList(APIView):
         summaries = functions.filter_by_content_type(summaries, content_type)
         summaries = functions.filter_by_category(summaries, category)
 
-        if request.user.is_authenticated and (user := users_functions.find_user_data(user=request.user)) is not None:  # type: ignore
+        if request.user.is_authenticated and (user := request.user):  # type: ignore
             me_param = query_params.get("me", "false")
             private_param = query_params.get("private", None)
 
@@ -197,7 +275,7 @@ class SummaryList(APIView):
             summaries = summaries.filter(is_private=False)
 
         summaries = summaries[:limit]
-        serializer = serializers.SummarySerializer(summaries, many=True)
+        serializer = serializers.SummaryPreviewSerializer(summaries, many=True)
 
         return_data = [
             {

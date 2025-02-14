@@ -1,7 +1,7 @@
 export const contentTypes = [
   { title: 'Text', value: 'text' },
   { title: 'Website', value: 'website' },
-  { title: 'PDF', value: 'pdf' },
+  { title: 'File', value: 'file' },
   { title: 'Video', value: 'video' },
 ]
 
@@ -12,7 +12,7 @@ export function getContentType(value: string): { title: string, value: string } 
 const contentTypeColors: Record<string, string> = {
   text: 'purple',
   website: 'green',
-  pdf: 'orange',
+  file: 'orange',
   video: 'blue',
 }
 
