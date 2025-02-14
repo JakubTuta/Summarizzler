@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 8080
 
 # Specify the command to run the application
-CMD ["fastapi", "run", "main.py", "--port", "8080"]
+CMD ["python", "manage.py", "runserver", "--port", "8080"]

@@ -1,4 +1,3 @@
-/* eslint-disable node/prefer-global/process */
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
 export default defineNuxtConfig({
@@ -41,34 +40,11 @@ export default defineNuxtConfig({
     },
   },
 
-  runtimeConfig: {
-    public: {
-      isDocker: process.env.DOCKER === 'true',
-      serverUrl: process.env.DOCKER === 'true'
-        ? 'http://host.docker.internal:8000'
-        : 'http://localhost:8000',
-    },
-  },
-
   ssr: false,
 
   nitro: {
     preset: 'node-server',
   },
-
-  // nitro: {
-  //   static: true,
-  //   esbuild: {
-  //     options: {
-  //       target: 'esnext',
-  //     },
-  //   },
-  //   prerender: {
-  //     crawlLinks: true,
-  //     routes: ['/'],
-  //     failOnError: false,
-  //   },
-  // },
 
   typescript: {
     strict: true,

@@ -4,6 +4,7 @@ import typing
 import requests
 from django.contrib.auth.models import User
 from django.http import QueryDict
+from django.test import Client
 
 from . import models, serializers
 
@@ -107,13 +108,14 @@ def get_jwt_token(
 
 
 def refresh_token(token: str) -> typing.Optional[typing.Dict[str, str]]:
-    base_url = os.getenv("SERVER_URL")
-    url = f"{base_url}/auth/token/refresh/"
+    url = "/auth/token/refresh/"
 
     data: dict[str, str] = {
         "refresh": token,
     }
-    response: requests.Response = requests.post(url, data=data)
+
+    client = Client()
+    response = client.post(url, data=data)
 
     if response.status_code != 200:
         return None
@@ -128,13 +130,13 @@ def refresh_token(token: str) -> typing.Optional[typing.Dict[str, str]]:
 
 
 def verify_token(token: str) -> bool:
-    base_url = os.getenv("SERVER_URL")
-    url = f"{base_url}/auth/token/verify/"
+    url = "/auth/token/verify/"
 
     data: dict[str, str] = {
         "token": token,
     }
 
-    response: requests.Response = requests.post(url, data=data)
+    client = Client()
+    response = client.post(url, data=data)
 
     return response.status_code == 200

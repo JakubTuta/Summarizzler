@@ -4,8 +4,7 @@ import axios, { AxiosError } from 'axios'
 import { ACCESS_TOKEN } from '~/constants/localStorage'
 
 export const useApiStore = defineStore('api', () => {
-  const runtimeConfig = useRuntimeConfig()
-  const baseURL = runtimeConfig.public.serverUrl
+  const baseURL = 'http://localhost:8000'
 
   const defaultHeaders = {
     'Content-Type': 'application/json',
