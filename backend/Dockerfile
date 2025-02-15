@@ -1,5 +1,5 @@
 # Use the official Python image from the Docker Hub
-FROM python:3.12.9-alpine
+FROM python:3.12.9-slim
 
 # Set the working directory in the container
 WORKDIR /app
@@ -10,11 +10,11 @@ COPY requirements.txt .
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install playwright chromium
-RUN on_startup.sh
-
 # Copy the rest of the application code into the container
 COPY . .
+
+# Install playwright chromium
+RUN playwright install chromium
 
 # Expose the port the application runs on
 EXPOSE 8080
