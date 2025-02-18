@@ -1,7 +1,7 @@
 import type { IUser } from './user'
 
 export interface ISummaryPreview {
-  id: number
+  id: string
   title: string
   summary: string
   author: IUser | null
@@ -15,7 +15,7 @@ export interface ISummaryPreview {
 
 export function mapSummaryPreview(summary: any): ISummaryPreview {
   return {
-    id: summary?.id || 0,
+    id: summary?.id || '',
     title: summary?.title || '',
     summary: summary?.summary || '',
     author: summary?.author || null,

@@ -12,6 +12,7 @@ export const useSummaryStore = defineStore('summary', () => {
   const summaries = ref<ISummaryPreview[]>([])
   const lastLoadedObject = ref<ISummary | null>(null)
   const isEmpty = ref(false)
+  const searchSummaries = ref<ISummaryPreview[]>([])
 
   const apiStore = useApiStore()
 
@@ -202,17 +203,31 @@ export const useSummaryStore = defineStore('summary', () => {
     return null
   }
 
+  const searchSummary = async (query: string) => {
+    const url = `/summary/search/?query=${query}&limit=5`
+
+    const response = await apiStore.sendRequest({ url, method: 'GET' })
+
+    if (apiStore.isResponseOk(response)) {
+      const summaries = (response as AxiosResponse).data.map(mapSummaryPreview)
+
+      searchSummaries.value = summaries
+    }
+  }
+
   return {
     loading,
     recentlyCreatedId,
     recentlyError,
     summaries,
     isEmpty,
+    searchSummaries,
     clearSummaries,
     createWebsiteSummary,
     createTextSummary,
     createFileSummary,
     getSummaries,
     getSummaryById,
+    searchSummary,
   }
 })

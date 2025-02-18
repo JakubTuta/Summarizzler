@@ -73,7 +73,7 @@ onMounted(async () => {
           </v-card-subtitle>
 
           <v-card-text>
-            {{ summary.summary.substring(0, 80) }}...
+            {{ summary.summary.replace(/<[^>]*>/g, '').substring(0, 80) }}...
           </v-card-text>
 
           <v-card-actions>

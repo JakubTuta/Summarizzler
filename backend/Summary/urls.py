@@ -9,4 +9,5 @@ urlpatterns: list[URLPattern] = [
     path("file/", views.FileView.as_view(), name="file_upload"),
     path("", views.SummaryList.as_view(), name="summary_list"),
     path("id/<int:id>/", views.SummaryDetail.as_view(), name="summary_detail"),
+    path("search/", views.SearchView.as_view(), name="search"),
 ]

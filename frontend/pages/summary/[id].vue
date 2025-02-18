@@ -287,7 +287,7 @@ function generatePDF(text: string) {
         </div>
 
         <div
-          class="text-body-1"
+          class="text-body-1 mx-3 mb-3"
           style="white-space: pre-wrap"
           v-html="DOMPurify.sanitize(summary.summary)"
         />

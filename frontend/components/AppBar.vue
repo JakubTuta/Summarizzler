@@ -1,12 +1,33 @@
 <script setup lang="ts">
-import { useDisplay } from 'vuetify';
+import { useDisplay } from 'vuetify'
 
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
 
+const summaryStore = useSummaryStore()
+const { searchSummaries } = storeToRefs(summaryStore)
+
 const { mobile, smAndDown } = useDisplay()
 
 const search = ref('')
+const loading = ref(false)
+
+const debounceTimer = ref<NodeJS.Timeout>()
+
+function searchFunction(value: string) {
+  if (value.length < 3)
+    return
+
+  loading.value = true
+
+  if (debounceTimer.value)
+    clearTimeout(debounceTimer.value)
+
+  debounceTimer.value = setTimeout(async () => {
+    await summaryStore.searchSummary(value)
+    loading.value = false
+  }, 1000)
+}
 </script>
 
 <template>
@@ -50,7 +71,35 @@ const search = ref('')
         :max-width="smAndDown
           ? '300px'
           : '400px'"
-      />
+        @update:model-value="searchFunction"
+      >
+        <v-menu
+          activator="parent"
+          location="top"
+        >
+          <v-list v-if="searchSummaries.length">
+            <v-list-item
+              v-for="summary in searchSummaries"
+              :key="summary.id"
+              :to="`/summary/${summary.id}`"
+            >
+              <v-list-item-title>
+                {{ summary.title }}
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+
+        <template #loader>
+          <v-progress-linear
+            :active="loading"
+            color="primary"
+            height="5"
+            indeterminate
+            z-2
+          />
+        </template>
+      </v-text-field>
     </div>
 
     <div

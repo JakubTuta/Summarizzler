@@ -5,6 +5,7 @@ import Users.functions as users_functions
 import Users.serializers as users_serializers
 from django.contrib.auth.models import User
 from django.core.files.storage import default_storage
+from django.db.models import Q
 from django.db.models.manager import BaseManager
 from django.http import HttpRequest
 from PyPDF2 import PdfReader
@@ -326,5 +327,53 @@ class SummaryDetail(APIView):
             return_data["author"] = (
                 users_serializers.UserDataSerializer(author).data if author else None
             )
+
+        return Response(return_data, status=status.HTTP_200_OK)
+
+
+class SearchView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request: HttpRequest) -> Response:
+        query_params = request.query_params  # type: ignore
+
+        try:
+            limit = int(query_params.get("limit", 5))
+        except ValueError:
+            return Response(
+                {"message": "Invalid limit value"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if (search_query := query_params.get("query", None)) is None:
+            return Response(
+                {"message": "Missing query parameter"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        format_query = search_query.lower().strip()
+
+        summaries = models.Summary.objects.filter(
+            Q(title__icontains=format_query) | Q(tags__icontains=format_query)
+        )
+        summaries = summaries[:limit]
+
+        serializer = serializers.SummaryPreviewSerializer(summaries, many=True)
+
+        return_data = [
+            {
+                **summary,
+                "author": (
+                    users_serializers.UserDataSerializer(author).data
+                    if author
+                    else None
+                ),
+            }
+            for summary in serializer.data
+            if (author := users_functions.find_user_data(user=summary["author"]))
+            is not None
+            or not summary["author"]
+        ]
 
         return Response(return_data, status=status.HTTP_200_OK)

@@ -20,7 +20,7 @@ langchain_template = (
     "2. **No Extra Content:** Do not include any additional text, comments, or explanations in your response. "
     "3. **Empty Response:** If no information matches the description, return an empty string ('')."
     "4. **Direct Data Only:** Your output should contain only the data that is explicitly requested, with no other text."
-    "5. **Format response:** Add to your response html tags like <br> for line breaks, <p> for paragraphs, <h1> for headers, <strong> for bold text, <em> for italic text, <a> for links, <ul> for unordered lists, <ol> for ordered lists, <li> for list items to make the response more clean and readable."
+    "5. **Format response:** Add to your response html tags like <br> for line breaks, <p> for paragraphs, <h1> for headers, <strong> for bold text, <em> for italic text, <a> for links, <ul> for unordered lists, <ol> for ordered lists, <li> for list items, <table> for tables, <tr> for table rows, <th> for table headers, <td> for table cells, to make the response more clean and readable."
 )
 
 

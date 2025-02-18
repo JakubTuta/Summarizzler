@@ -1,8 +1,16 @@
+import uuid
+
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 
+def generate_uuid():
+    return uuid.uuid4().int % (2**63)
+
+
 class Summary(models.Model):
+    # pk
+    id = models.BigIntegerField(primary_key=True, default=generate_uuid, editable=False)
     # required
     title = models.TextField(default="")
     summary = models.TextField(default="")
