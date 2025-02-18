@@ -259,7 +259,7 @@ class SummaryList(APIView):
         summaries = functions.filter_by_content_type(summaries, content_type)
         summaries = functions.filter_by_category(summaries, category)
 
-        if request.user.is_authenticated and (user := request.user):  # type: ignore
+        if request.user.is_authenticated and (user := users_functions.find_user_data(user=request.user)):  # type: ignore
             me_param = query_params.get("me", "false")
             private_param = query_params.get("private", None)
 
@@ -278,22 +278,7 @@ class SummaryList(APIView):
         summaries = summaries[:limit]
         serializer = serializers.SummaryPreviewSerializer(summaries, many=True)
 
-        return_data = [
-            {
-                **summary,
-                "author": (
-                    users_serializers.UserDataSerializer(author).data
-                    if author
-                    else None
-                ),
-            }
-            for summary in serializer.data
-            if (author := users_functions.find_user_data(user=summary["author"]))
-            is not None
-            or not summary["author"]
-        ]
-
-        return Response(return_data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SummaryDetail(APIView):
@@ -320,15 +305,7 @@ class SummaryDetail(APIView):
 
         serializer = serializers.SummarySerializer(summary)
 
-        return_data = serializer.data
-        if (
-            author := users_functions.find_user_data(user=return_data["author"])
-        ) is not None or not return_data["author"]:
-            return_data["author"] = (
-                users_serializers.UserDataSerializer(author).data if author else None
-            )
-
-        return Response(return_data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SearchView(APIView):
@@ -361,19 +338,4 @@ class SearchView(APIView):
 
         serializer = serializers.SummaryPreviewSerializer(summaries, many=True)
 
-        return_data = [
-            {
-                **summary,
-                "author": (
-                    users_serializers.UserDataSerializer(author).data
-                    if author
-                    else None
-                ),
-            }
-            for summary in serializer.data
-            if (author := users_functions.find_user_data(user=summary["author"]))
-            is not None
-            or not summary["author"]
-        ]
-
-        return Response(return_data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
