@@ -1,10 +1,7 @@
 import io
-import os
 
 import Users.functions as users_functions
-import Users.serializers as users_serializers
 from django.contrib.auth.models import User
-from django.core.files.storage import default_storage
 from django.db.models import Q
 from django.db.models.manager import BaseManager
 from django.http import HttpRequest
