@@ -19,25 +19,35 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from . import functions, models, serializers
 
 
+def with_required_fields(required_fields):
+    def decorator(view_func):
+        def wrapper(self, request, *args, **kwargs):
+            request_data = request.data
+            if len(
+                missing_fields := functions.check_required_fields(
+                    request_data, required_fields
+                )
+            ):
+                return Response(
+                    {"message": f"Missing fields: {', '.join(missing_fields)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            return view_func(self, request, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 class WebsiteView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
+    @with_required_fields(["url", "prompt"])
     def post(self, request: HttpRequest) -> Response:
         request_data = request.data  # type: ignore
-        required_fields = ["url", "prompt"]
-
-        if len(
-            missing_fields := functions.check_required_fields(
-                request_data, required_fields
-            )
-        ):
-            return Response(
-                {"message": f"Missing fields: {', '.join(missing_fields)}"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        user: User = request.user  # type: ignore
+        user = request.user  # type: ignore
         url = request_data["url"]
         user_prompt = request_data["prompt"]
 
@@ -97,18 +107,9 @@ class TextView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
-    def post(self, request):
+    @with_required_fields(["text", "prompt"])
+    def post(self, request: HttpRequest):
         request_data = request.data  # type: ignore
-        required_fields = ["text", "prompt"]
-
-        missing_fields = functions.check_required_fields(request_data, required_fields)
-
-        if missing_fields:
-            return Response(
-                {"message": f"Missing fields: {', '.join(missing_fields)}"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         user = request.user  # type: ignore
         input_text = request_data["text"]
         user_prompt = request_data["prompt"]
@@ -151,21 +152,10 @@ class FileView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
+    @with_required_fields(["prompt"])
     def post(self, request: HttpRequest) -> Response:
-        required_fields = ["prompt"]
         request_data = request.data  # type: ignore
-
-        if len(
-            missing_fields := functions.check_required_fields(
-                request_data, required_fields
-            )
-        ):
-            return Response(
-                {"message": f"Missing fields: {', '.join(missing_fields)}"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        user: User = request.user  # type: ignore
+        user = request.user  # type: ignore
         file = request.FILES.get("file")
         prompt = request_data.get("prompt")
         is_private = request_data.get("private", False)
