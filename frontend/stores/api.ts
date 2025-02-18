@@ -4,7 +4,8 @@ import axios, { AxiosError } from 'axios'
 import { ACCESS_TOKEN } from '~/constants/localStorage'
 
 export const useApiStore = defineStore('api', () => {
-  const baseURL = 'http://localhost:8000'
+  // const baseURL = 'http://localhost:8000'
+  const baseURL = 'https://server-783752631570.europe-central2.run.app'
 
   const defaultHeaders = {
     'Content-Type': 'application/json',

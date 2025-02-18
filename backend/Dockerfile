@@ -1,23 +1,34 @@
-# Use the official Python image from the Docker Hub
-FROM python:3.12.9-slim
+# Build stage
+FROM python:3.12.9-slim AS builder
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements file into the container
-COPY requirements.txt .
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Install the dependencies
+RUN pip install --upgrade pip
+
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code into the container
+# Production stage
+FROM python:3.12.9-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Copy installed packages from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages/ /usr/local/lib/python3.12/site-packages/
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+
+# Copy application code
 COPY . .
 
 # Install playwright chromium
 RUN playwright install chromium
 
-# Expose the port the application runs on
-EXPOSE 8080
+EXPOSE 8000
 
-# Specify the command to run the application
-CMD ["python", "manage.py", "runserver", "--port", "8080"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
