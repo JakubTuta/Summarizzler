@@ -172,30 +172,30 @@ function searchFunction(value: string) {
     </div>
 
     <template #extension>
-      <div style="display: flex; justify-content: space-between; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
-        <div>
-          <v-btn
-            :to="user
-              ? '/panel'
-              : '/'"
-            variant="text"
-            color="secondary"
-            style="cursor: pointer;"
-          >
-            Home
-          </v-btn>
+      <div
+        class="scrollable-container mx-3"
+      >
+        <v-btn
+          :to="user
+            ? '/panel'
+            : '/'"
+          variant="text"
+          color="secondary"
+          style="cursor: pointer;"
+        >
+          Home
+        </v-btn>
 
-          <v-btn
-            variant="text"
-            to="/discover"
-            color="secondary"
-            class="ml-3"
-          >
-            Discover
-          </v-btn>
-        </div>
+        <v-btn
+          variant="text"
+          to="/discover"
+          color="secondary"
+          class="ml-3"
+        >
+          Discover
+        </v-btn>
 
-        <div>
+        <div v-if="!user">
           <v-btn
             v-if="!user"
             variant="text"
@@ -216,9 +216,19 @@ function searchFunction(value: string) {
           >
             Register
           </v-btn>
+        </div>
+
+        <div v-if="user">
+          <v-btn
+            variant="text"
+            to="/summary/create"
+            color="secondary"
+            prepend-icon="mdi-plus"
+          >
+            Add
+          </v-btn>
 
           <v-btn
-            v-if="user"
             variant="text"
             to="/auth/logout"
             color="primary"
@@ -231,3 +241,28 @@ function searchFunction(value: string) {
     </template>
   </v-app-bar>
 </template>
+
+<style scoped>
+.scrollable-container {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  scrollbar-width: thin;
+  padding-bottom: 5px;
+}
+
+.scrollable-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollable-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+</style>

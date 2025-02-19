@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { useDisplay } from 'vuetify'
+
 definePageMeta({ middleware: ['auth'] })
 
+const { mobile } = useDisplay()
 const router = useRouter()
 
 const userStore = useUserStore()
@@ -55,6 +58,6 @@ const tabs = [
 
     <CreateText v-else-if="selectedTab === 'text'" />
 
-    <CreateFile v-else-if="selectedTab === 'file'" />
+    <CreateFile v-else-if="selectedTab === 'file' && !mobile" />
   </v-container>
 </template>

@@ -55,7 +55,7 @@ function send() {
         <v-sheet
           class="d-flex align-center justify-center"
           min-height="220px"
-          width="600px"
+          max-width="600px"
           border
           rounded
           :color="wrongFileType

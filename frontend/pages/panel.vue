@@ -7,7 +7,7 @@ definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
 const router = useRouter()
-const { mobile, mdAndUp, sm } = useDisplay()
+const { mobile } = useDisplay()
 
 const userStore = useUserStore()
 const { user, loading: userLoading } = storeToRefs(userStore)
@@ -72,18 +72,6 @@ onMounted(async () => {
   )
 
   router.replace({ query: cleanQueryParams })
-})
-
-const cardHeight = computed(() => {
-  if (mdAndUp.value) {
-    return 70
-  }
-
-  if (sm.value) {
-    return 60
-  }
-
-  return 35
 })
 
 function loadSummaries(
@@ -263,7 +251,7 @@ function updatePrivacyStatus(newPrivacyStatus: boolean | null) {
         </v-row>
       </v-card-subtitle>
 
-      <v-card-text :style="`max-height: ${cardHeight}vh; overflow-y: auto`">
+      <v-card-text>
         <v-row v-if="summaries.length">
           <v-col
             v-for="summary in summaries"

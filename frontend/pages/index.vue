@@ -27,10 +27,11 @@ onMounted(async () => {
         sm="6"
         md="4"
         lg="3"
+        align="center"
       >
         <v-skeleton-loader
           class="mx-auto"
-          max-width="400"
+          max-width="350"
           height="230"
           type="card"
         />
@@ -45,12 +46,15 @@ onMounted(async () => {
         sm="6"
         md="4"
         lg="3"
+        align="center"
       >
         <v-card
-          class="my-2"
-          max-width="400"
+          class="my-3"
+          max-width="350"
           height="230"
+          elevation="24"
           :to="`/summary/${summary.id}`"
+          align="start"
         >
           <v-card-title>
             {{ summary.title }}

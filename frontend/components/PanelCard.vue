@@ -10,7 +10,7 @@ const { summary } = toRefs(props)
 <template>
   <v-card
     class="my-3"
-    max-width="400"
+    max-width="350"
     height="230"
     elevation="24"
     :to="`/summary/${summary.id}`"
