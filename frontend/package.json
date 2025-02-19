@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "bunx --bun vite --port 3000",
     "generate": "nuxt generate",
+    "preview": "bunx --bun vite preview",
+    "serve": "bunx --bun vite preview",
     "lint": "eslint . --fix",
     "postinstall": "nuxt prepare",
-    "preview": "nuxt preview",
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {

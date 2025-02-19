@@ -34,3 +34,5 @@ venv
 
 *praison*
 *.sh
+serviceAccount.json
+*.cache

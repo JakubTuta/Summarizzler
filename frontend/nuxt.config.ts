@@ -4,6 +4,9 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'SummaRizzler',
+      meta: [
+        { name: 'description', content: 'AI-powered tool that generates concise summaries for text, websites, files, and videos using advanced language models.' },
+      ],
     },
   },
 
@@ -18,7 +21,7 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
     (_options, nuxt) => {
       nuxt.hooks.hook('vite:extendConfig', (config) => {
-        config.plugins.push(vuetify({ autoImport: true }))
+        config.plugins?.push(vuetify({ autoImport: true }))
       })
     },
   ],
@@ -28,6 +31,8 @@ export default defineNuxtConfig({
     dirs: [
       'stores/**',
       'constants/**',
+      'components/**',
+      'helpers/**',
       'utils/**',
     ],
   },
@@ -43,7 +48,10 @@ export default defineNuxtConfig({
   ssr: false,
 
   nitro: {
-    preset: 'node-server',
+    preset: 'static',
+    firebase: {
+      gen: 2,
+    },
   },
 
   typescript: {
