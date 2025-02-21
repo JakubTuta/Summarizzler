@@ -4,6 +4,7 @@ import { type IUser, mapUser } from '~/models/user'
 
 export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false)
+  const initLoading = ref(false)
   const user = ref<IUser | null>(null)
 
   const apiStore = useApiStore()
@@ -144,7 +145,7 @@ export const useAuthStore = defineStore('auth', () => {
       return
     }
 
-    loading.value = true
+    initLoading.value = true
 
     const decodedToken = jwtDecode(localStorage.getItem(ACCESS_TOKEN)!)
     // @ts-expect-error user_id is one of the fields in the token
@@ -158,7 +159,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     if (!apiStore.isResponseOk(response)) {
       clearAuth()
-      loading.value = false
+      initLoading.value = false
 
       if (!['/auth/login', '/auth/register'].includes(router.currentRoute.value.path)) {
         router.push('/auth/login')
@@ -172,15 +173,16 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = mapUser(responseData.user)
 
     if (['/', '/auth/login', '/auth/register'].includes(router.currentRoute.value.path)) {
-      loading.value = false
+      initLoading.value = false
       router.push('/panel')
     }
 
-    loading.value = false
+    initLoading.value = false
   }
 
   return {
     loading,
+    initLoading,
     user,
     login,
     logout,

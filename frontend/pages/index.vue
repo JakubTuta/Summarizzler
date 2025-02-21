@@ -2,19 +2,24 @@
 const summaryStore = useSummaryStore()
 const { summaries, loading } = storeToRefs(summaryStore)
 
+const authStore = useAuthStore()
+const { user, initLoading } = storeToRefs(authStore)
+
 const summariesPerPage = 8
 
-onMounted(async () => {
-  summaryStore.clearSummaries()
-  await summaryStore.getSummaries({
-    limit: summariesPerPage,
-    privateParam: false,
-    meOnly: false,
-    sort: 'favorites',
-    contentType: null,
-    category: null,
-  })
-})
+watch(initLoading, (newLoading) => {
+  if (!newLoading && !user.value) {
+    summaryStore.clearSummaries()
+    summaryStore.getSummaries({
+      limit: summariesPerPage,
+      privateParam: false,
+      meOnly: false,
+      sort: 'favorites',
+      contentType: null,
+      category: null,
+    })
+  }
+}, { immediate: true })
 </script>
 
 <template>
@@ -30,6 +35,7 @@ onMounted(async () => {
         align="center"
       >
         <v-skeleton-loader
+          rounded="xl"
           class="mx-auto"
           max-width="350"
           height="230"
@@ -39,6 +45,24 @@ onMounted(async () => {
     </v-row>
 
     <v-row v-else>
+      <div class="w-100% flex justify-center">
+        <div
+          class="text-h5"
+        >
+          <span class="text-h4">
+            Welcome to Summarizzer!
+          </span>
+
+          <p class="my-2">
+            A platform to share and read summaries of books, articles, and more.
+          </p>
+
+          <p>
+            To get started, sign up or log in.
+          </p>
+        </div>
+      </div>
+
       <v-col
         v-for="summary in summaries"
         :key="summary.id"
