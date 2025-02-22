@@ -1,4 +1,5 @@
 import io
+import subprocess
 
 import Users.functions as users_functions
 from django.contrib.auth.models import User
@@ -372,3 +373,21 @@ class SearchView(APIView):
         serializer = serializers.SummaryPreviewSerializer(summaries, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UpdatePlaywright(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request: HttpRequest) -> Response:
+        try:
+            subprocess.run(["playwright", "install", "chromium"], check=True)
+            return Response(
+                {"message": "Playwright updated successfully"},
+                status=status.HTTP_200_OK,
+            )
+        except subprocess.CalledProcessError as e:
+            return Response(
+                {"message": f"Failed to update Playwright: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
