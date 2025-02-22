@@ -372,7 +372,11 @@ class SearchView(APIView):
 
         serializer = serializers.SummaryPreviewSerializer(summaries, many=True)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer_data = serializer.data
+        for item in serializer_data:
+            item["id"] = str(item["id"])
+
+        return Response(serializer_data, status=status.HTTP_200_OK)
 
 
 class UpdatePlaywright(APIView):
