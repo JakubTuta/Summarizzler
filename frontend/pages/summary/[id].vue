@@ -19,6 +19,9 @@ const summary = ref<ISummary | null>(null)
 const isAuthError = ref(false)
 
 onMounted(async () => {
+  if (!user.value)
+    userStore.getUser()
+
   const paramsData = route.params as { id: string }
   summaryId.value = paramsData.id
 
@@ -87,8 +90,24 @@ function generatePDF(text: string) {
         {{ summary.title }}
       </v-card-title>
 
-      <v-card-subtitle v-if="summary.author?.username && summary.createdAt">
-        {{ `By: ${summary.author.username} at ${formatTime(summary.createdAt)}` }}
+      <v-card-subtitle
+        v-if="summary.author?.username && summary.createdAt"
+      >
+        <div class="justify-space-between align-center w-100% flex">
+          <div>
+            {{ `By: ${summary.author.username} at ${formatTime(summary.createdAt)}` }}
+          </div>
+
+          <v-btn
+            v-if="user?.id === summary.author?.id"
+            variant="text"
+            color="error"
+            prepend-icon="mdi-delete"
+            @click="summaryStore.deleteSummary(summary.id)"
+          >
+            Delete
+          </v-btn>
+        </div>
       </v-card-subtitle>
 
       <v-card-text class="ma-2">

@@ -4,7 +4,7 @@ import { type IUser, mapUser } from '~/models/user'
 
 export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false)
-  const initLoading = ref(false)
+  const initLoading = ref(true)
   const user = ref<IUser | null>(null)
 
   const apiStore = useApiStore()
@@ -141,11 +141,10 @@ export const useAuthStore = defineStore('auth', () => {
 
     if (!tokenValid) {
       clearAuth()
+      initLoading.value = false
 
       return
     }
-
-    initLoading.value = true
 
     const decodedToken = jwtDecode(localStorage.getItem(ACCESS_TOKEN)!)
     // @ts-expect-error user_id is one of the fields in the token

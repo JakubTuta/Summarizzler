@@ -32,7 +32,7 @@ class Summary(models.Model):
     dislikes = models.IntegerField(default=0, blank=True)
     favorites = models.IntegerField(default=0, blank=True)
     tags = ArrayField(
-        models.CharField(max_length=20, blank=True), default=list, blank=True
+        models.CharField(max_length=30, blank=True), default=list, blank=True
     )
     is_private = models.BooleanField(default=False, blank=True)
 

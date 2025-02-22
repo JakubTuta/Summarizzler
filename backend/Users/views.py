@@ -25,12 +25,11 @@ class User(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        user_data_deserializer = serializers.UserDataDeserializer(user_data)
-        user_data_deserialized_data = user_data_deserializer.deserialize()
+        user_data_serializer = serializers.UserDataSerializer(user_data)
 
         return Response(
             {
-                "user": user_data_deserialized_data,
+                "user": user_data_serializer.data,
             },
             status=status.HTTP_200_OK,
         )
@@ -88,12 +87,11 @@ class Login(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        user_data_deserializer = serializers.UserDataDeserializer(user_data)
-        user_data_deserialized_data = user_data_deserializer.deserialize()
+        user_data_serializer = serializers.UserDataSerializer(user_data)
 
         return Response(
             {
-                "user": user_data_deserialized_data,
+                "user": user_data_serializer.data,
                 "tokens": tokens,
             },
             status=status.HTTP_200_OK,
@@ -156,12 +154,11 @@ class Register(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        user_data_deserializer = serializers.UserDataDeserializer(user_data)
-        user_data_deserialized_data = user_data_deserializer.deserialize()
+        user_data_serializer = serializers.UserDataSerializer(user_data)
 
         return Response(
             {
-                "user": user_data_deserialized_data,
+                "user": user_data_serializer.data,
                 "tokens": tokens,
             },
             status=status.HTTP_201_CREATED,

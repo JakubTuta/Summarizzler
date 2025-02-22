@@ -15,6 +15,7 @@ export const useSummaryStore = defineStore('summary', () => {
   const searchSummaries = ref<ISummaryPreview[]>([])
 
   const apiStore = useApiStore()
+  const router = useRouter()
 
   const clearSummaries = () => {
     summaries.value = []
@@ -203,6 +204,20 @@ export const useSummaryStore = defineStore('summary', () => {
     return null
   }
 
+  const deleteSummary = async (id: string) => {
+    const url = `/summary/id/${id}/`
+
+    const response = await apiStore.sendRequest({ url, method: 'DELETE' })
+
+    if (apiStore.isResponseOk(response)) {
+      router.push('/panel')
+
+      return true
+    }
+
+    return false
+  }
+
   const searchSummary = async (query: string) => {
     const url = `/summary/search/?query=${query}&limit=5`
 
@@ -229,5 +244,6 @@ export const useSummaryStore = defineStore('summary', () => {
     getSummaries,
     getSummaryById,
     searchSummary,
+    deleteSummary,
   }
 })

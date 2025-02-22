@@ -20,7 +20,15 @@ export const useUserStore = defineStore('user', () => {
 
     loading.value = true
 
-    const decodedToken = jwtDecode(localStorage.getItem(ACCESS_TOKEN)!)
+    const token = localStorage.getItem(ACCESS_TOKEN)
+
+    if (!token) {
+      loading.value = false
+
+      return
+    }
+
+    const decodedToken = jwtDecode(token)
     // @ts-expect-error user_id is one of the fields in the token
     const userId = decodedToken.user_id
 

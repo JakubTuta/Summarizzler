@@ -44,9 +44,14 @@ class WebsiteView(APIView):
     @with_required_fields(["url", "prompt"])
     def post(self, request: HttpRequest) -> Response:
         request_data = request.data  # type: ignore
-        user = request.user  # type: ignore
         url = request_data["url"]
         user_prompt = request_data["prompt"]
+
+        if (user_data := users_functions.find_user_data(user=request.user)) is None:  # type: ignore
+            return Response(
+                {"message": "Failed to get user data"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if (dom_content := functions.Website.get_dom_content(url)) is None:
             return Response(
@@ -62,22 +67,17 @@ class WebsiteView(APIView):
 
         cleaned_content = functions.Website.clean_body_content(body_content)
         bot_response = functions.Website.ask_bot(cleaned_content, user_prompt)
-
-        if (title := functions.Website.get_title_for_content(dom_content)) is None:
-            return Response(
-                {"message": "Failed to get title for content"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        title = functions.Website.get_title_for_content(dom_content)
 
         data = {
             "url": url,
-            "title": title,
+            "title": title if title is not None else bot_response["title"],
             "content_type": functions.Website.content_type,
             "summary": bot_response["content"],
-            "author": user,
+            "author": user_data,
             "user_prompt": user_prompt,
             "is_private": request_data.get("private", False),
-            "tags": bot_response["tags"],
+            "tags": bot_response["tags"][:5],
             "category": bot_response["category"],
         }
 
@@ -94,7 +94,7 @@ class WebsiteView(APIView):
 
         return Response(
             {
-                "id": summary.id,  # type: ignore
+                "id": str(summary.id),  # type: ignore
             },
             status=status.HTTP_200_OK,
         )
@@ -107,9 +107,14 @@ class TextView(APIView):
     @with_required_fields(["text", "prompt"])
     def post(self, request: HttpRequest):
         request_data = request.data  # type: ignore
-        user = request.user  # type: ignore
         input_text = request_data["text"]
         user_prompt = request_data["prompt"]
+
+        if (user_data := users_functions.find_user_data(user=request.user)) is None:  # type: ignore
+            return Response(
+                {"message": "Failed to get user data"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         bot_response = functions.Text.ask_bot(input_text, user_prompt)
 
@@ -117,7 +122,7 @@ class TextView(APIView):
             "title": bot_response["title"],
             "content_type": functions.Text.content_type,
             "summary": bot_response["content"],
-            "author": user,
+            "author": user_data,
             "user_prompt": user_prompt,
             "is_private": request_data.get("private", False),
             "tags": bot_response["tags"],
@@ -138,7 +143,7 @@ class TextView(APIView):
 
         return Response(
             {
-                "id": summary.id,  # type: ignore
+                "id": str(summary.id),  # type: ignore
             },
             status=status.HTTP_200_OK,
         )
@@ -204,13 +209,12 @@ class FileView(APIView):
 
             return Response(
                 {
-                    "id": summary.id,  # type: ignore
+                    "id": str(summary.id),  # type: ignore
                 },
                 status=status.HTTP_200_OK,
             )
 
         except Exception as e:
-            print(e)
             return Response(
                 {"message": f"Error processing file: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -264,23 +268,35 @@ class SummaryList(APIView):
 
         summaries = summaries[:limit]
         serializer = serializers.SummaryPreviewSerializer(summaries, many=True)
+        serializer_data = serializer.data
+        for item in serializer_data:
+            item["id"] = str(item["id"])
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer_data, status=status.HTTP_200_OK)
 
 
 class SummaryDetail(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    authentication_classes = [JWTAuthentication]
+
+    def get_permissions(self):
+        if self.request.method == "DELETE":
+            return [IsAuthenticated()]
+
+        return [AllowAny()]
 
     def get(self, request: HttpRequest, id: int) -> Response:
-        user = None
+        user_data = None
         if request.user.is_authenticated:
-            user = User(request.user)
+            user_data = users_functions.find_user_data(user=request.user)  # type: ignore
 
         try:
             summary = models.Summary.objects.get(id=id)
 
-            if not summary.is_private and user is not None and user != summary.author:
+            if (
+                not summary.is_private
+                and user_data is not None
+                and user_data != summary.author
+            ):
                 return Response(
                     {"message": "Summary is private"}, status=status.HTTP_403_FORBIDDEN
                 )
@@ -291,8 +307,38 @@ class SummaryDetail(APIView):
             )
 
         serializer = serializers.SummarySerializer(summary)
+        serializer_data = serializer.data
+        serializer_data["id"] = str(serializer_data["id"])
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer_data, status=status.HTTP_200_OK)
+
+    def delete(self, request: HttpRequest, id: int) -> Response:
+        if not request.user.is_authenticated:
+            return Response(
+                {"message": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        if (user_data := users_functions.find_user_data(user=request.user)) is None:  # type: ignore
+            return Response(
+                {"message": "Failed to get user data"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            summary = models.Summary.objects.get(id=id)
+        except models.Summary.DoesNotExist:
+            return Response(
+                {"message": "Summary not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if summary.author != user_data:
+            return Response(
+                {"message": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        summary.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SearchView(APIView):

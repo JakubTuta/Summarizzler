@@ -4,8 +4,8 @@ import axios, { AxiosError } from 'axios'
 import { ACCESS_TOKEN } from '~/constants/localStorage'
 
 export const useApiStore = defineStore('api', () => {
-  // const baseURL = 'http://localhost:8000'
-  const baseURL = 'https://server-783752631570.europe-central2.run.app'
+  const baseURL = 'http://localhost:8000'
+  // const baseURL = 'https://server-783752631570.europe-central2.run.app'
 
   const defaultHeaders = {
     'Content-Type': 'application/json',
@@ -47,6 +47,9 @@ export const useApiStore = defineStore('api', () => {
           break
         case 'PUT':
           response = await api.put(url, data, { headers: requestHeaders })
+          break
+        case 'DELETE':
+          response = await api.delete(url, { headers: requestHeaders })
           break
         default:
           break

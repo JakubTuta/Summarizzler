@@ -138,7 +138,7 @@ function searchFunction(value: string) {
         color="secondary"
         prepend-icon="mdi-plus"
       >
-        Add
+        New
       </v-btn>
 
       <v-btn
@@ -225,7 +225,7 @@ function searchFunction(value: string) {
             color="secondary"
             prepend-icon="mdi-plus"
           >
-            Add
+            New
           </v-btn>
 
           <v-btn

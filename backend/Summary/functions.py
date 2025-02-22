@@ -33,7 +33,9 @@ def check_required_fields(
 
 
 def create_summary(data: typing.Dict[str, str]) -> typing.Optional[models.Summary]:
-    serializer = serializers.SummarySerializer(data=data)
+    serializer = serializers.SummarySerializer(
+        data=data, context={"author": data["author"]}
+    )
 
     if not serializer.is_valid():
         error_message = ", ".join(

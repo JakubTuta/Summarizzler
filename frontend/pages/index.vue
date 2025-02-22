@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const router = useRouter()
+
 const summaryStore = useSummaryStore()
 const { summaries, loading } = storeToRefs(summaryStore)
 
@@ -7,8 +9,11 @@ const { user, initLoading } = storeToRefs(authStore)
 
 const summariesPerPage = 8
 
-watch(initLoading, (newLoading) => {
-  if (!newLoading && !user.value) {
+onMounted(() => {
+  if (user.value)
+    router.push('/panel')
+
+  if (!initLoading.value && !user.value) {
     summaryStore.clearSummaries()
     summaryStore.getSummaries({
       limit: summariesPerPage,
@@ -19,33 +24,13 @@ watch(initLoading, (newLoading) => {
       category: null,
     })
   }
-}, { immediate: true })
+})
 </script>
 
 <template>
   <v-container style="display: flex; align-items: center; justify-content: center; height: 100%">
-    <v-row v-if="loading">
-      <v-col
-        v-for="i in summariesPerPage"
-        :key="i"
-        cols="12"
-        sm="6"
-        md="4"
-        lg="3"
-        align="center"
-      >
-        <v-skeleton-loader
-          rounded="xl"
-          class="mx-auto"
-          max-width="350"
-          height="230"
-          type="card"
-        />
-      </v-col>
-    </v-row>
-
-    <v-row v-else>
-      <div class="w-100% flex justify-center">
+    <div class="w-100%">
+      <div class="mb-4 w-100% flex justify-center">
         <div
           class="text-h5"
         >
@@ -63,89 +48,104 @@ watch(initLoading, (newLoading) => {
         </div>
       </div>
 
-      <v-col
-        v-for="summary in summaries"
-        :key="summary.id"
-        cols="12"
-        sm="6"
-        md="4"
-        lg="3"
-        align="center"
-      >
-        <v-card
-          class="my-3"
-          max-width="350"
-          height="230"
-          elevation="24"
-          :to="`/summary/${summary.id}`"
-          align="start"
+      <v-row v-if="loading">
+        <v-col
+          v-for="i in summariesPerPage"
+          :key="i"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
+          align="center"
         >
-          <v-card-title>
-            {{ summary.title }}
-          </v-card-title>
+          <v-skeleton-loader
+            rounded="xl"
+            class="mx-auto my-3"
+            max-width="350"
+            height="230"
+            type="card"
+          />
+        </v-col>
+      </v-row>
 
-          <v-card-subtitle>
-            <v-chip
-              v-if="summary.isPrivate"
-              color="error"
-            >
-              Private
-            </v-chip>
+      <v-row v-else>
+        <v-col
+          v-for="summary in summaries"
+          :key="summary.id"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
+          align="center"
+        >
+          <v-card
+            class="my-3"
+            max-width="350"
+            height="230"
+            elevation="24"
+            :to="`/summary/${summary.id}`"
+            align="start"
+          >
+            <v-card-title>
+              {{ summary.title }}
+            </v-card-title>
 
-            <v-chip
-              v-else
-              color="success"
-            >
-              Public
-            </v-chip>
-          </v-card-subtitle>
-
-          <v-card-text>
-            {{ summary.summary.substring(0, 100) }}...
-          </v-card-text>
-
-          <v-card-actions>
-            <div style="position: absolute; left: 15px; bottom: 10px; display: flex; align-items: center; justify-content: center;">
-              <span
-                class="text-yellow"
-                style="display: flex; align-items: center; justify-content: center;"
+            <v-card-subtitle>
+              <v-chip
+                variant="text"
+                :color="getCategoryColor(summary.category)"
               >
-                {{ summary.favorites }}
+                {{ getCategory(summary.category)?.title || '' }}
+              </v-chip>
+            </v-card-subtitle>
 
-                <v-icon
-                  class="ml-1"
-                  color="yellow"
-                  size="x-small"
+            <v-card-text>
+              {{ summary.summary.substring(0, 100) }}...
+            </v-card-text>
+
+            <v-card-actions>
+              <div style="position: absolute; left: 15px; bottom: 10px; display: flex; align-items: center; justify-content: center;">
+                <span
+                  class="text-yellow"
+                  style="display: flex; align-items: center; justify-content: center;"
                 >
-                  mdi-star
-                </v-icon>
-              </span>
+                  {{ summary.favorites }}
+
+                  <v-icon
+                    class="ml-1"
+                    color="yellow"
+                    size="x-small"
+                  >
+                    mdi-star
+                  </v-icon>
+                </span>
+
+                <span
+                  class="text-success ml-4"
+                  style="display: flex; align-items: center; justify-content: center;"
+                >
+                  {{ summary.likes }}
+
+                  <v-icon
+                    class="ml-1"
+                    color="success"
+                    size="x-small"
+                  >
+                    mdi-thumb-up
+                  </v-icon>
+                </span>
+              </div>
 
               <span
-                class="text-success ml-4"
-                style="display: flex; align-items: center; justify-content: center;"
+                class="text-info"
+                style="position: absolute; right: 10px; bottom: 10px;"
               >
-                {{ summary.likes }}
-
-                <v-icon
-                  class="ml-1"
-                  color="success"
-                  size="x-small"
-                >
-                  mdi-thumb-up
-                </v-icon>
+                Read more
               </span>
-            </div>
-
-            <span
-              class="text-info"
-              style="position: absolute; right: 10px; bottom: 10px;"
-            >
-              Read more
-            </span>
-          </v-card-actions>
-        </v-card>
-      </v-col>
-    </v-row>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-row>
+    </div>
   </v-container>
 </template>

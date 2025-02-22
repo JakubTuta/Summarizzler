@@ -24,12 +24,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserDataSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="user.id", read_only=True)
     username = serializers.CharField(source="user.username", read_only=True)
     email = serializers.CharField(source="user.email", read_only=True)
 
     class Meta:
         model = models.UserData
         fields = (
+            "id",
             "username",
             "email",
             "favorites",
@@ -40,15 +42,3 @@ class UserDataSerializer(serializers.ModelSerializer):
         user_data = models.UserData.objects.create(user=user, **validated_data)
 
         return user_data
-
-
-class UserDataDeserializer:
-    def __init__(self, model: models.UserData):
-        self.model = model
-
-    def deserialize(self):
-        return {
-            "username": self.model.user.username,
-            "email": self.model.user.email,
-            "favorites": self.model.favorites.values_list("id", flat=True),
-        }

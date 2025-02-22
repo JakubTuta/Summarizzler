@@ -31,15 +31,19 @@ class SummarySerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
+        author = self.context.get("author", None)
+        if author:
+            validated_data["author"] = author
+
         summary = models.Summary.objects.create(**validated_data)
         return summary
 
     def get_author(self, obj):
-        if not obj.author:
-            return None
         author = users_functions.find_user_data(user=obj.author)
+
         if author:
             return users_serializers.UserDataSerializer(author).data
+
         return None
 
 
@@ -69,9 +73,9 @@ class SummaryPreviewSerializer(serializers.ModelSerializer):
         return re.sub(r"<[^>]*>", "", obj.summary[:100])
 
     def get_author(self, obj):
-        if not obj.author:
-            return None
         author = users_functions.find_user_data(user=obj.author)
+
         if author:
             return users_serializers.UserDataSerializer(author).data
+
         return None
