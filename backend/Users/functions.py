@@ -1,7 +1,5 @@
-import os
 import typing
 
-import requests
 from django.contrib.auth.models import User
 from django.http import QueryDict
 from django.test import Client
@@ -86,14 +84,15 @@ def create_user_data(user: User) -> typing.Optional[models.UserData]:
 def get_jwt_token(
     username: str, password: str
 ) -> typing.Optional[typing.Dict[str, str]]:
-    base_url = os.getenv("SERVER_URL")
-    url = f"{base_url}/auth/token/"
+    url = "/auth/token/"
 
     data = {
         "username": username,
         "password": password,
     }
-    response = requests.post(url, data=data)
+
+    client = Client()
+    response = client.post(url, data=data)
 
     if response.status_code != 200:
         return None

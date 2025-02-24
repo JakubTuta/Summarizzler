@@ -10,6 +10,13 @@ export default defineNuxtConfig({
     },
   },
 
+  runtimeConfig: {
+    public: {
+      // eslint-disable-next-line node/prefer-global/process
+      SERVER_URL: process.env.SERVER_URL || 'http://localhost:8000',
+    },
+  },
+
   build: {
     transpile: ['vuetify'],
   },
