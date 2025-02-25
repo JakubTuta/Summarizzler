@@ -2,13 +2,13 @@ import os
 import typing
 
 import pydantic
+import requests
 from bs4 import BeautifulSoup
 from django.db.models.manager import BaseManager
 from django.http import QueryDict
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from playwright.sync_api import sync_playwright
 
 from . import models, serializers
 
@@ -155,19 +155,15 @@ class Website:
     @staticmethod
     def get_dom_content(url: str) -> typing.Optional[str]:
         try:
-            with sync_playwright() as p:
-                browser = p.chromium.launch()
-                page = browser.new_page()
-                page.goto(url, timeout=60000)
-                page.wait_for_selector("body", timeout=30000)
-                dom_content = page.content()
-                browser.close()
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+            response: requests.Response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
 
-                return dom_content
+            return response.text
 
-        except Exception as e:
-            print(f"Playwright scraping failed: {e}")
-
+        except requests.exceptions.RequestException:
             return None
 
     @staticmethod

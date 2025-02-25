@@ -1,5 +1,5 @@
 # Build stage
-FROM python:3.12.9-slim AS builder
+FROM python:3.12.9-alpine AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Production stage
-FROM python:3.12.9-slim
+FROM python:3.12.9-alpine
 
 WORKDIR /app
 
@@ -25,9 +25,6 @@ COPY --from=builder /usr/local/bin/ /usr/local/bin/
 
 # Copy application code
 COPY . .
-
-# Install playwright chromium
-RUN playwright install chromium
 
 EXPOSE 8000
 

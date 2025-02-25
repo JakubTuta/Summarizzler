@@ -9,22 +9,26 @@ const { user, initLoading } = storeToRefs(authStore)
 
 const summariesPerPage = 8
 
-onMounted(() => {
-  if (user.value)
+watch(initLoading, (newLoading) => {
+  if (newLoading)
+    return
+
+  if (user.value) {
     router.push('/panel')
 
-  if (!initLoading.value && !user.value) {
-    summaryStore.clearSummaries()
-    summaryStore.getSummaries({
-      limit: summariesPerPage,
-      privateParam: false,
-      meOnly: false,
-      sort: 'favorites',
-      contentType: null,
-      category: null,
-    })
+    return
   }
-})
+
+  summaryStore.clearSummaries()
+  summaryStore.getSummaries({
+    limit: summariesPerPage,
+    privateParam: false,
+    meOnly: false,
+    sort: 'favorites',
+    contentType: null,
+    category: null,
+  })
+}, { immediate: true })
 </script>
 
 <template>
