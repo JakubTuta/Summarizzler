@@ -7,15 +7,37 @@ import { mapSummaryPreview } from '~/models/summaryPreview'
 
 export const useSummaryStore = defineStore('summary', () => {
   const loading = ref(false)
+  const favoriteLoading = ref(false)
+  const likeLoading = ref(false)
+  const dislikeLoading = ref(false)
   const recentlyCreatedId = ref<string | null>(null)
   const recentlyError = ref<string | null>(null)
   const summaries = ref<ISummaryPreview[]>([])
+  const discoveredSummaries = ref<ISummaryPreview[]>([])
+  const previewSummaries = ref<ISummaryPreview[]>([])
   const lastLoadedObject = ref<ISummary | null>(null)
+  const lastLoadedDiscoveredObject = ref<ISummary | null>(null)
   const isEmpty = ref(false)
   const searchSummaries = ref<ISummaryPreview[]>([])
 
   const apiStore = useApiStore()
   const router = useRouter()
+
+  const resetState = () => {
+    loading.value = false
+    favoriteLoading.value = false
+    likeLoading.value = false
+    dislikeLoading.value = false
+    recentlyCreatedId.value = null
+    recentlyError.value = null
+    summaries.value = []
+    discoveredSummaries.value = []
+    previewSummaries.value = []
+    lastLoadedObject.value = null
+    lastLoadedDiscoveredObject.value = null
+    isEmpty.value = false
+    searchSummaries.value = []
+  }
 
   const clearSummaries = () => {
     summaries.value = []
@@ -174,8 +196,66 @@ export const useSummaryStore = defineStore('summary', () => {
       if (mappedSummaries.length < limit) {
         isEmpty.value = true
       }
+    }
 
-      return mappedSummaries
+    loading.value = false
+  }
+
+  const getDiscoverySummaries = async (
+    {
+      limit = 10,
+      sort = 'date',
+      contentType = null,
+      category = null,
+    }: {
+      limit: number
+      sort: 'favorites' | 'likes' | 'date'
+      contentType: 'text' | 'website' | 'file' | 'video' | null
+      category: string | null
+    }) => {
+    let url = `/summary/?limit=${limit}&me=false&private=false&sort=${sort}`
+
+    if (lastLoadedDiscoveredObject.value) {
+      url += `&startAfter=${lastLoadedDiscoveredObject.value.id}`
+    }
+
+    if (contentType) {
+      url += `&contentType=${contentType}`
+    }
+
+    if (category) {
+      url += `&category=${category}`
+    }
+
+    loading.value = true
+    const response = await apiStore.sendRequest({ url, method: 'GET' })
+
+    if (apiStore.isResponseOk(response)) {
+      loading.value = false
+
+      const mappedSummaries = (response as AxiosResponse).data.map(mapSummaryPreview)
+      discoveredSummaries.value.push(...mappedSummaries)
+      lastLoadedObject.value = mappedSummaries[mappedSummaries.length - 1]
+
+      if (mappedSummaries.length < limit) {
+        isEmpty.value = true
+      }
+    }
+
+    loading.value = false
+  }
+
+  const getPreviewSummaries = async (limit: number) => {
+    const url = `/summary/?limit=${limit}&me=false&private=false&sort=favorites`
+
+    loading.value = true
+    const response = await apiStore.sendRequest({ url, method: 'GET' })
+
+    if (apiStore.isResponseOk(response)) {
+      loading.value = false
+
+      const mappedSummaries = (response as AxiosResponse).data.map(mapSummaryPreview)
+      previewSummaries.value.push(...mappedSummaries)
     }
 
     loading.value = false
@@ -224,26 +304,86 @@ export const useSummaryStore = defineStore('summary', () => {
     const response = await apiStore.sendRequest({ url, method: 'GET' })
 
     if (apiStore.isResponseOk(response)) {
-      const summaries = (response as AxiosResponse).data.map(mapSummaryPreview)
-
-      searchSummaries.value = summaries
+      searchSummaries.value = (response as AxiosResponse).data.map(mapSummaryPreview)
     }
+  }
+
+  const addFavorite = async (summary: ISummary) => {
+    favoriteLoading.value = true
+    const url = `/summary/favorite/${summary.id}/`
+
+    const response = await apiStore.sendRequest({ url, method: 'POST' })
+
+    if (apiStore.isResponseOk(response)) {
+      const responseObject = response as AxiosResponse
+      const responseSummary = responseObject.data.summary
+      favoriteLoading.value = false
+
+      return mapSummary(responseSummary)
+    }
+
+    favoriteLoading.value = false
+  }
+
+  const addLike = async (summary: ISummary) => {
+    likeLoading.value = true
+    const url = `/summary/like/${summary.id}/`
+
+    const response = await apiStore.sendRequest({ url, method: 'POST' })
+
+    if (apiStore.isResponseOk(response)) {
+      const responseObject = response as AxiosResponse
+      const responseSummary = responseObject.data.summary
+      likeLoading.value = false
+
+      return mapSummary(responseSummary)
+    }
+
+    likeLoading.value = false
+  }
+
+  const addDislike = async (summary: ISummary) => {
+    dislikeLoading.value = true
+    const url = `/summary/dislike/${summary.id}/`
+
+    const response = await apiStore.sendRequest({ url, method: 'POST' })
+
+    if (apiStore.isResponseOk(response)) {
+      const responseObject = response as AxiosResponse
+      const responseSummary = responseObject.data.summary
+      dislikeLoading.value = false
+
+      return mapSummary(responseSummary)
+    }
+
+    dislikeLoading.value = false
   }
 
   return {
     loading,
+    likeLoading,
+    dislikeLoading,
+    favoriteLoading,
     recentlyCreatedId,
     recentlyError,
     summaries,
+    discoveredSummaries,
+    previewSummaries,
     isEmpty,
     searchSummaries,
+    resetState,
     clearSummaries,
     createWebsiteSummary,
     createTextSummary,
     createFileSummary,
     getSummaries,
+    getDiscoverySummaries,
+    getPreviewSummaries,
     getSummaryById,
     searchSummary,
     deleteSummary,
+    addFavorite,
+    addLike,
+    addDislike,
   }
 })

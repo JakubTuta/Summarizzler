@@ -12,12 +12,8 @@ class User(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
-    def get(self, request: HttpRequest, user_id: int) -> Response:
-        if user_id != request.user.id:  # type: ignore
-            return Response(
-                {"message": "User not authenticated"},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+    def get(self, request: HttpRequest) -> Response:
+        user_id = request.user.id  # type: ignore
 
         if (user_data := functions.find_user_data(user_id=user_id)) is None:
             return Response(

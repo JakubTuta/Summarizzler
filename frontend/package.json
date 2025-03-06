@@ -1,6 +1,5 @@
 {
   "name": "summarizzler",
-  "packageManager": "bun@1.2.2",
   "private": true,
   "type": "module",
   "scripts": {

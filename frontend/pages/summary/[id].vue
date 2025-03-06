@@ -10,6 +10,7 @@ const route = useRoute()
 const { mobile } = useDisplay()
 
 const summaryStore = useSummaryStore()
+const { favoriteLoading, likeLoading, dislikeLoading } = storeToRefs(summaryStore)
 
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
@@ -69,6 +70,44 @@ function generatePDF(text: string) {
   })
 
   doc.save(`${summary.value?.title || 'summary'}.pdf`)
+}
+
+function userReacted(reaction: 'favorite' | 'like' | 'dislike') {
+  if (!user.value || !summary.value)
+    return false
+
+  switch (reaction) {
+    case 'favorite':
+      return user.value.favorites.includes(summary.value.id)
+    case 'like':
+      return user.value.likes.includes(summary.value.id)
+    case 'dislike':
+      return user.value.dislikes.includes(summary.value.id)
+  }
+}
+
+async function addFavorite() {
+  if (user.value && summary.value) {
+    const response = await summaryStore.addFavorite(summary.value)
+    if (response)
+      summary.value = response
+  }
+}
+
+async function addLike() {
+  if (user.value && summary.value) {
+    const response = await summaryStore.addLike(summary.value)
+    if (response)
+      summary.value = response
+  }
+}
+
+async function addDislike() {
+  if (user.value && summary.value) {
+    const response = await summaryStore.addDislike(summary.value)
+    if (response)
+      summary.value = response
+  }
 }
 </script>
 
@@ -230,13 +269,22 @@ function generatePDF(text: string) {
                 rounded="circle"
                 icon
                 size="large"
+                :color="userReacted('favorite')
+                  ? 'rgba(255, 255, 0, 0.1)'
+                  : ''"
+                :loading="favoriteLoading"
+                @click="user
+                  ? addFavorite()
+                  : null"
               >
                 <v-tooltip
                   location="bottom"
                   activator="parent"
                 >
                   {{ user
-                    ? 'Soon...'
+                    ? userReacted('favorite')
+                      ? 'Unfavorite'
+                      : 'Favorite'
                     : 'Login to favorite' }}
                 </v-tooltip>
 
@@ -255,13 +303,22 @@ function generatePDF(text: string) {
                 icon
                 size="large"
                 class="mx-10"
+                :color="userReacted('like')
+                  ? 'rgba(76, 175, 80, 0.1)'
+                  : ''"
+                :loading="likeLoading"
+                @click="user
+                  ? addLike()
+                  : null"
               >
                 <v-tooltip
                   location="bottom"
                   activator="parent"
                 >
                   {{ user
-                    ? 'Soon...'
+                    ? userReacted('like')
+                      ? 'Unlike'
+                      : 'Like'
                     : 'Login to like' }}
                 </v-tooltip>
 
@@ -279,13 +336,22 @@ function generatePDF(text: string) {
                 rounded="circle"
                 icon
                 size="large"
+                :color="userReacted('dislike')
+                  ? 'rgba(244, 67, 54, 0.1)'
+                  : ''"
+                :loading="dislikeLoading"
+                @click="user
+                  ? addDislike()
+                  : null"
               >
                 <v-tooltip
                   location="bottom"
                   activator="parent"
                 >
                   {{ user
-                    ? 'Soon...'
+                    ? userReacted('dislike')
+                      ? 'Undislike'
+                      : 'Dislike'
                     : 'Login to dislike' }}
                 </v-tooltip>
 
@@ -293,7 +359,7 @@ function generatePDF(text: string) {
                   color="error"
                   class="mr-2"
                 >
-                  mdi-thumb-up
+                  mdi-thumb-down
                 </v-icon>
                 {{ summary.dislikes }}
               </v-btn>

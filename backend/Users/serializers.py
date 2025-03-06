@@ -34,6 +34,8 @@ class UserDataSerializer(serializers.ModelSerializer):
             "id",
             "username",
             "email",
+            "likes",
+            "dislikes",
             "favorites",
         )
 

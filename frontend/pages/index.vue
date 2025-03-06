@@ -19,15 +19,7 @@ watch(initLoading, (newLoading) => {
     return
   }
 
-  summaryStore.clearSummaries()
-  summaryStore.getSummaries({
-    limit: summariesPerPage,
-    privateParam: false,
-    meOnly: false,
-    sort: 'favorites',
-    contentType: null,
-    category: null,
-  })
+  summaryStore.getPreviewSummaries(summariesPerPage)
 }, { immediate: true })
 </script>
 
@@ -47,7 +39,29 @@ watch(initLoading, (newLoading) => {
           </p>
 
           <p>
-            To get started, sign up or log in.
+            To get started,
+
+            <NuxtLink to="/auth/login">
+              <v-btn
+                variant="text"
+                color="primary"
+                class="mx-2"
+              >
+                Login
+              </v-btn>
+            </NuxtLink>
+
+            or
+
+            <NuxtLink to="/auth/register">
+              <v-btn
+                variant="text"
+                color="primary"
+                class="mx-2"
+              >
+                Register
+              </v-btn>
+            </NuxtLink>
           </p>
         </div>
       </div>

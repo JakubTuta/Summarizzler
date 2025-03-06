@@ -28,9 +28,15 @@ class Summary(models.Model):
     user_prompt = models.TextField(default="")
 
     # not required
-    likes = models.IntegerField(default=0, blank=True)
-    dislikes = models.IntegerField(default=0, blank=True)
-    favorites = models.IntegerField(default=0, blank=True)
+    likes = models.ManyToManyField(
+        "Users.UserData", related_name="liked_summaries", blank=True
+    )
+    dislikes = models.ManyToManyField(
+        "Users.UserData", related_name="disliked_summaries", blank=True
+    )
+    favorites = models.ManyToManyField(
+        "Users.UserData", related_name="favorite_summaries", blank=True
+    )
     tags = ArrayField(
         models.CharField(max_length=30, blank=True), default=list, blank=True
     )

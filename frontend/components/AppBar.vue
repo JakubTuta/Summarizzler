@@ -103,32 +103,7 @@ function searchFunction(value: string) {
     </div>
 
     <div
-      v-if="!user"
-      class="ml-auto mr-3"
-    >
-      <v-btn
-        variant="text"
-        to="/auth/login"
-        color="primary"
-        prepend-icon="mdi-login"
-        class="z-1"
-      >
-        Login
-      </v-btn>
-
-      <v-btn
-        class="z-1 ml-3"
-        variant="text"
-        to="/auth/register"
-        color="primary"
-        prepend-icon="mdi-account-plus"
-      >
-        Register
-      </v-btn>
-    </div>
-
-    <div
-      v-else
+      v-if="user"
       class="ml-auto mr-3"
     >
       <v-btn

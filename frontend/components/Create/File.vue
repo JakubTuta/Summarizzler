@@ -6,6 +6,7 @@ const wrongFileType = ref(false)
 const userPrompt = ref('')
 const isPrivate = ref(false)
 const isShowDialog = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 function handleFileDrop(event: any) {
   const fileList = event.dataTransfer.files
@@ -79,7 +80,7 @@ function send() {
             <v-btn
               color="primary"
               class="mt-2"
-              @click="$refs.fileInput.click()"
+              @click="fileInput?.click()"
             >
               Browse Files
             </v-btn>
@@ -96,7 +97,7 @@ function send() {
               v-if="formData && formData.get('file')"
               class="mt-6"
             >
-              {{ formData.get('file')!.name || '' }}
+              {{ (formData.get('file') as File)?.name || '' }}
             </div>
           </div>
         </v-sheet>

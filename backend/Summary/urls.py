@@ -10,4 +10,7 @@ urlpatterns: list[URLPattern] = [
     path("", views.SummaryList.as_view(), name="summary_list"),
     path("id/<int:id>/", views.SummaryDetail.as_view(), name="summary_detail"),
     path("search/", views.SearchView.as_view(), name="search"),
+    path("like/<int:id>/", views.LikeView.as_view(), name="like"),
+    path("dislike/<int:id>/", views.DislikeView.as_view(), name="dislike"),
+    path("favorite/<int:id>/", views.FavoriteView.as_view(), name="favorite"),
 ]

@@ -10,6 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
   const apiStore = useApiStore()
   const userStore = useUserStore()
   const router = useRouter()
+  const summaryStore = useSummaryStore()
 
   const clearAuth = () => {
     localStorage.removeItem(ACCESS_TOKEN)
@@ -52,6 +53,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = () => {
     clearAuth()
+    summaryStore.resetState()
     router.push('/')
   }
 
@@ -146,11 +148,7 @@ export const useAuthStore = defineStore('auth', () => {
       return
     }
 
-    const decodedToken = jwtDecode(localStorage.getItem(ACCESS_TOKEN)!)
-    // @ts-expect-error user_id is one of the fields in the token
-    const userId = decodedToken.user_id
-
-    const url = `/auth/user/${userId}/`
+    const url = `/auth/user/me/`
     const response = await apiStore.sendRequest({
       url,
       method: 'GET',

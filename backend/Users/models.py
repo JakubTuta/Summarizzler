@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 
@@ -9,9 +10,19 @@ class UserData(models.Model):
         primary_key=True,
         db_column="user_id",
     )
+    likes = models.ManyToManyField(
+        "Summary.Summary",
+        related_name="liked_by",
+        blank=True,
+    )
+    dislikes = models.ManyToManyField(
+        "Summary.Summary",
+        related_name="disliked_by",
+        blank=True,
+    )
     favorites = models.ManyToManyField(
         "Summary.Summary",
-        related_name="users",
+        related_name="favored_by",
         blank=True,
     )
 

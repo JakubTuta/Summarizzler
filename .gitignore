@@ -36,3 +36,4 @@ venv
 *.sh
 serviceAccount.json
 *.cache
+*-lock.json

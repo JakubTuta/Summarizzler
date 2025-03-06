@@ -1,5 +1,4 @@
 import type { AxiosResponse } from 'axios'
-import { jwtDecode } from 'jwt-decode'
 import type { IUser } from '~/models/user'
 import { mapUser } from '~/models/user'
 
@@ -28,11 +27,7 @@ export const useUserStore = defineStore('user', () => {
       return
     }
 
-    const decodedToken = jwtDecode(token)
-    // @ts-expect-error user_id is one of the fields in the token
-    const userId = decodedToken.user_id
-
-    const url = `/auth/user/${userId}/`
+    const url = `/auth/user/me/`
     const response = await apiStore.sendRequest({
       url,
       method: 'GET',

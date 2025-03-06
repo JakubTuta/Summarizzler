@@ -1,8 +1,6 @@
 import io
-import subprocess
 
 import Users.functions as users_functions
-from django.contrib.auth.models import User
 from django.db.models import Q
 from django.db.models.manager import BaseManager
 from django.http import HttpRequest
@@ -308,7 +306,7 @@ class SummaryDetail(APIView):
                 {"message": "Summary not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = serializers.SummarySerializer(summary)
+        serializer = serializers.SummaryResponseSerializer(summary)
         serializer_data = serializer.data
         serializer_data["id"] = str(serializer_data["id"])
 
@@ -341,6 +339,120 @@ class SummaryDetail(APIView):
         summary.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class FavoriteView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request: HttpRequest, id: int) -> Response:
+        user_data = users_functions.find_user_data(user=request.user)  # type: ignore
+        if user_data is None:
+            return Response(
+                {"message": "Failed to get user data"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            summary = models.Summary.objects.get(id=id)
+
+        except models.Summary.DoesNotExist:
+            return Response(
+                {"message": "Summary not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if summary.favorites.filter(user=user_data).exists():
+            summary.favorites.remove(user_data)
+
+        else:
+            summary.favorites.add(user_data)
+
+        if user_data.favorites.filter(id=id).exists():
+            user_data.favorites.remove(summary)
+
+        else:
+            user_data.favorites.add(summary)
+
+        response_summary = serializers.SummaryResponseSerializer(summary).data
+
+        return Response({"summary": response_summary}, status=status.HTTP_200_OK)
+
+
+class LikeView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request: HttpRequest, id: int) -> Response:
+        user_data = users_functions.find_user_data(user=request.user)  # type: ignore
+        if user_data is None:
+            return Response(
+                {"message": "Failed to get user data"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            summary = models.Summary.objects.get(id=id)
+
+        except models.Summary.DoesNotExist:
+            return Response(
+                {"message": "Summary not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if summary.likes.filter(user=user_data).exists():
+            summary.likes.remove(user_data)
+
+        else:
+            summary.likes.add(user_data)
+
+        if user_data.likes.filter(id=id).exists():
+            user_data.likes.remove(summary)
+
+        else:
+            user_data.likes.add(summary)
+
+        response_summary = serializers.SummaryResponseSerializer(summary).data
+
+        return Response({"summary": response_summary}, status=status.HTTP_200_OK)
+
+
+class DislikeView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request: HttpRequest, id: int) -> Response:
+        user_data = users_functions.find_user_data(user=request.user)  # type: ignore
+        if user_data is None:
+            return Response(
+                {"message": "Failed to get user data"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            summary = models.Summary.objects.get(id=id)
+
+        except models.Summary.DoesNotExist:
+            return Response(
+                {"message": "Summary not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if summary.dislikes.filter(user=user_data).exists():
+            summary.dislikes.remove(user_data)
+
+        else:
+            summary.dislikes.add(user_data)
+
+        if user_data.dislikes.filter(id=id).exists():
+            user_data.dislikes.remove(summary)
+
+        else:
+            user_data.dislikes.add(summary)
+
+        response_summary = serializers.SummaryResponseSerializer(summary).data
+
+        return Response({"summary": response_summary}, status=status.HTTP_200_OK)
 
 
 class SearchView(APIView):

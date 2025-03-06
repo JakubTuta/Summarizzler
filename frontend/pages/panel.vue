@@ -55,7 +55,6 @@ onMounted(async () => {
   contentType.value = queryContentType
   category.value = queryCategory
 
-  summaryStore.clearSummaries()
   loadSummaries(summaryAmount, isPrivate, querySortBy, queryContentType, queryCategory)
 
   const newQueryParams = {
@@ -81,7 +80,7 @@ function loadSummaries(
   contentType: 'text' | 'website' | 'file' | 'video' | null,
   category: string | null,
 ) {
-  if (!sortBy || privacyStatus === undefined || summaryLoading.value) {
+  if (!sortBy || privacyStatus === undefined || summaryLoading.value || summaries.value.length) {
     return
   }
 
@@ -100,7 +99,6 @@ function updateCategory(newCategory: string | null) {
     return
   }
 
-  summaryStore.clearSummaries()
   loadSummaries(summaryAmount, privacyStatus.value, sortBy.value, contentType.value, newCategory)
 
   if (newCategory !== null) {
@@ -118,7 +116,6 @@ function updateContentType(newContentType: 'text' | 'website' | 'file' | 'video'
     return
   }
 
-  summaryStore.clearSummaries()
   loadSummaries(summaryAmount, privacyStatus.value, sortBy.value, newContentType, category.value)
 
   if (newContentType !== null) {
@@ -136,7 +133,6 @@ function updateSortBy(newSortBy: 'favorites' | 'likes' | 'date' | null) {
     return
   }
 
-  summaryStore.clearSummaries()
   loadSummaries(summaryAmount, privacyStatus.value, newSortBy, contentType.value, category.value)
 
   if (newSortBy !== null) {
@@ -154,7 +150,6 @@ function updatePrivacyStatus(newPrivacyStatus: boolean | null) {
     return
   }
 
-  summaryStore.clearSummaries()
   loadSummaries(summaryAmount, newPrivacyStatus, sortBy.value, contentType.value, category.value)
 
   if (newPrivacyStatus !== null) {

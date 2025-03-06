@@ -8,7 +8,7 @@ const router = useRouter()
 const { mobile, smAndUp } = useDisplay()
 
 const summaryStore = useSummaryStore()
-const { summaries, loading: summaryLoading, isEmpty } = storeToRefs(summaryStore)
+const { discoveredSummaries: summaries, loading: summaryLoading, isEmpty } = storeToRefs(summaryStore)
 
 const sortBy = ref<'favorites' | 'likes' | 'date' | null>(null)
 const contentType = ref<'text' | 'website' | 'file' | 'video' | null>(null)
@@ -31,7 +31,6 @@ onMounted(() => {
   contentType.value = queryContentType
   category.value = queryCategory
 
-  summaryStore.clearSummaries()
   loadSummaries(summaryAmount, querySortBy, queryContentType, queryCategory)
 
   const newQueryParams = {
@@ -65,10 +64,8 @@ function loadSummaries(
     return
   }
 
-  summaryStore.getSummaries({
+  summaryStore.getDiscoverySummaries({
     limit: amount,
-    privateParam: false,
-    meOnly: true,
     sort: sortBy,
     contentType,
     category,
@@ -80,7 +77,6 @@ function updateCategory(newCategory: string | null) {
     return
   }
 
-  summaryStore.clearSummaries()
   loadSummaries(summaryAmount, sortBy.value, contentType.value, newCategory)
 
   if (newCategory !== null) {
@@ -98,7 +94,6 @@ function updateContentType(newContentType: 'text' | 'website' | 'file' | 'video'
     return
   }
 
-  summaryStore.clearSummaries()
   loadSummaries(summaryAmount, sortBy.value, newContentType, category.value)
 
   if (newContentType !== null) {
@@ -116,7 +111,6 @@ function updateSortBy(newSortBy: 'favorites' | 'likes' | 'date' | null) {
     return
   }
 
-  summaryStore.clearSummaries()
   loadSummaries(summaryAmount, newSortBy, contentType.value, category.value)
 
   if (newSortBy !== null) {
@@ -127,6 +121,16 @@ function updateSortBy(newSortBy: 'favorites' | 'likes' | 'date' | null) {
     delete query.sortBy
     router.replace({ query })
   }
+}
+
+function formatTime(date: Date) {
+  const day = date.getDate().toString().padStart(2, '0')
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const year = date.getFullYear().toString().padStart(4, '0')
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+
+  return `${day}.${month}.${year} ${hours}:${minutes}`
 }
 </script>
 
@@ -197,24 +201,26 @@ function updateSortBy(newSortBy: 'favorites' | 'likes' | 'date' | null) {
                 {{ summary.title }}
               </span>
 
-              <v-chip
-                v-if="summary.category"
-                :color="getCategoryColor(summary.category)"
-                class="mr-2"
-              >
-                {{ getCategory(summary.category)?.title || '' }}
-              </v-chip>
+              <div>
+                <v-chip
+                  v-if="summary.category"
+                  :color="getCategoryColor(summary.category)"
+                  class="mr-2"
+                >
+                  {{ getCategory(summary.category)?.title || '' }}
+                </v-chip>
 
-              <v-chip
-                v-if="summary.contentType"
-                :color="getContentTypeColor(summary.contentType)"
-              >
-                {{ getContentType(summary.contentType)?.title || '' }}
-              </v-chip>
+                <v-chip
+                  v-if="summary.contentType"
+                  :color="getContentTypeColor(summary.contentType)"
+                >
+                  {{ getContentType(summary.contentType)?.title || '' }}
+                </v-chip>
+              </div>
             </v-list-item-title>
 
             <v-list-item-subtitle>
-              {{ `${summary.author?.username || ''} - ${summary.userPrompt}` }}
+              {{ `${summary.author?.username || ''} - ${formatTime(summary.createdAt)}` }}
             </v-list-item-subtitle>
 
             <div class="mt-4">
@@ -230,7 +236,6 @@ function updateSortBy(newSortBy: 'favorites' | 'likes' | 'date' | null) {
             class="my-3"
           >
             <v-skeleton-loader
-              class="mx-auto"
               max-width="80%"
               type="list-item-three-line"
             />

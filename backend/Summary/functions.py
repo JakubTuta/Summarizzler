@@ -57,9 +57,9 @@ def sort_summaries(
         case "date":
             return summaries.order_by("-created_at")
         case "likes":
-            return summaries.order_by("-likes")
+            return summaries.order_by("likes")
         case "favorites":
-            return summaries.order_by("-favorites")
+            return summaries.order_by("favorites")
         case _:
             return summaries
 
@@ -78,12 +78,14 @@ def filter_by_start_after(
                 ).order_by("-created_at")
 
             case "likes":
-                summaries = summaries.filter(likes__lt=summary.likes).order_by("-likes")
+                summaries = summaries.filter(likes__lt=summary.likes.count()).order_by(
+                    "-likes"
+                )
 
             case "favorites":
-                summaries = summaries.filter(favorites__lt=summary.favorites).order_by(
-                    "-favorites"
-                )
+                summaries = summaries.filter(
+                    favorites__lt=summary.favorites.count()
+                ).order_by("-favorites")
 
     return summaries
 

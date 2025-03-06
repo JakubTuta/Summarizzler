@@ -24,10 +24,6 @@ export function mapSummaryPreview(summary: any): ISummaryPreview {
     likes: summary?.likes || 0,
     favorites: summary?.favorites || 0,
     isPrivate: summary?.is_private || false,
-    createdAt: mapDate(summary?.created_at || new Date()),
+    createdAt: new Date(summary?.created_at || new Date()),
   }
-}
-
-function mapDate(date: string | Date): Date {
-  return new Date(date)
 }
