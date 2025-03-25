@@ -221,6 +221,62 @@ class FileView(APIView):
             )
 
 
+class VideoView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    @with_required_fields(["url", "prompt"])
+    def post(self, request: HttpRequest) -> Response:
+        request_data = request.data  # type: ignore
+        url = request_data["url"]
+        user_prompt = request_data["prompt"]
+
+        if (user_data := users_functions.find_user_data(user=request.user)) is None:  # type: ignore
+            return Response(
+                {"message": "Failed to get user data"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        youtube_url = "https://www.youtube.com/watch?v="
+        if youtube_url not in url:
+            return Response(
+                {"message": "Invalid URL. Only YouTube videos are supported."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        bot_response = functions.Video.ask_bot(url, user_prompt)
+
+        data = {
+            "title": bot_response["title"],
+            "content_type": functions.Video.content_type,
+            "summary": bot_response["content"],
+            "author": user_data,
+            "user_prompt": user_prompt,
+            "is_private": request_data.get("private", False),
+            "tags": bot_response["tags"],
+            "category": bot_response["category"],
+            "url": url,
+        }
+
+        try:
+            summary = functions.create_summary(data)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if summary is None:
+            return Response(
+                {"message": "Failed to create summary"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                "id": str(summary.id),  # type: ignore
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 class SummaryList(APIView):
     permission_classes = [AllowAny]
     authentication_classes = [JWTAuthentication]

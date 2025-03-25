@@ -34,6 +34,10 @@ const tabs = [
     title: 'File',
     value: 'file',
   },
+  {
+    title: 'Video',
+    value: 'video',
+  },
 ]
 </script>
 
@@ -59,5 +63,7 @@ const tabs = [
     <CreateText v-else-if="selectedTab === 'text'" />
 
     <CreateFile v-else-if="selectedTab === 'file' && !mobile" />
+
+    <CreateVideo v-else-if="selectedTab === 'file'" />
   </v-container>
 </template>

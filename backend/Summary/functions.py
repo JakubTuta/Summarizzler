@@ -23,6 +23,17 @@ langchain_template = (
     "5. **Format response:** Add to your response html tags like <br> for line breaks, <p> for paragraphs, <h1> for headers, <strong> for bold text, <em> for italic text, <a> for links, <ul> for unordered lists, <ol> for ordered lists, <li> for list items, <table> for tables, <tr> for table rows, <th> for table headers, <td> for table cells, to make the response more clean and readable."
 )
 
+langchain_template_video = (
+    "You are tasked with extracting specific information from the following YouTube video: {url}. "
+    "Format the response in this JSON format: {format_instructions}. "
+    "Please follow these instructions carefully: \n\n"
+    "1. **Extract Information:** If not stated otherwise by user, keep the response long, detailed and informative. Only extract the information that directly matches the provided description: {user_prompt}. "
+    "2. **No Extra Content:** Do not include any additional text, comments, or explanations in your response. "
+    "3. **Empty Response:** If no information matches the description, return an empty string ('')."
+    "4. **Direct Data Only:** Your output should contain only the data that is explicitly requested, with no other text."
+    "5. **Format response:** Add to your response html tags like <br> for line breaks, <p> for paragraphs, <h1> for headers, <strong> for bold text, <em> for italic text, <a> for links, <ul> for unordered lists, <ol> for ordered lists, <li> for list items, <table> for tables, <tr> for table rows, <th> for table headers, <td> for table cells, to make the response more clean and readable."
+)
+
 
 def check_required_fields(
     data: typing.Dict[str, str] | QueryDict, required_fields: typing.List[str]
@@ -293,6 +304,40 @@ class File:
         response = chain.invoke(
             {"dom_content": file_content, "user_prompt": user_prompt}
         )
+
+        for category in categories:
+            if response["category"] in category:
+                response["category"] = category
+                break
+
+        return response
+
+
+class Video:
+    content_type = "video"
+
+    @staticmethod
+    def ask_bot(youtube_url: str, user_prompt: str) -> dict[str, str]:
+        model = ChatGoogleGenerativeAI(
+            api_key=get_api_key(),  # type: ignore
+            model="gemini-2.5-pro-exp-03-25",
+            temperature=0,
+            max_tokens=None,
+            timeout=None,
+            max_retries=2,
+        )
+
+        parser = JsonOutputParser(pydantic_object=BotResponse)
+
+        prompt = PromptTemplate(
+            template=langchain_template_video,
+            input_variables=["url", "user_prompt"],
+            partial_variables={"format_instructions": parser.get_format_instructions()},
+        )
+
+        chain = prompt | model | parser
+
+        response = chain.invoke({"url": youtube_url, "user_prompt": user_prompt})
 
         for category in categories:
             if response["category"] in category:

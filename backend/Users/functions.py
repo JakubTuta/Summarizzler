@@ -20,14 +20,18 @@ def find_user(
     username: typing.Optional[str] = None,
     user_id: typing.Optional[int] = None,
 ) -> typing.Optional[User]:
-    if user_id is not None:
-        return User.objects.get(id=user_id)
+    try:
+        if user_id is not None:
+            return User.objects.get(id=user_id)
 
-    if email is not None:
-        return User.objects.get(email=email)
+        if email is not None:
+            return User.objects.get(email=email)
 
-    elif username is not None:
-        return User.objects.get(username=username)
+        elif username is not None:
+            return User.objects.get(username=username)
+
+    except User.DoesNotExist:
+        return None
 
 
 def find_user_data(

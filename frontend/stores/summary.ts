@@ -149,6 +149,39 @@ export const useSummaryStore = defineStore('summary', () => {
     loading.value = false
   }
 
+  const createVideoSummary = async (userUrl: string, userPrompt: string, isPrivate: boolean) => {
+    recentlyCreatedId.value = null
+    recentlyError.value = null
+    const url = '/summary/video/'
+    const data = { url: userUrl, prompt: userPrompt, private: isPrivate }
+
+    loading.value = true
+
+    const response = await apiStore.sendRequest({
+      url,
+      method: 'POST',
+      data,
+    })
+
+    if (apiStore.isResponseOk(response)) {
+      const responseObject = response as AxiosResponse
+      const createdId = responseObject.data.id
+      recentlyCreatedId.value = createdId
+      loading.value = false
+
+      return createdId
+    }
+    else if (response instanceof AxiosError) {
+      const responseObject = response as AxiosError
+      // @ts-expect-error message
+      recentlyError.value = responseObject.response?.data?.message || 'An error occurred'
+    }
+
+    loading.value = false
+
+    return null
+  }
+
   const getSummaries = async (
     {
       limit = 10,
@@ -376,6 +409,7 @@ export const useSummaryStore = defineStore('summary', () => {
     createWebsiteSummary,
     createTextSummary,
     createFileSummary,
+    createVideoSummary,
     getSummaries,
     getDiscoverySummaries,
     getPreviewSummaries,

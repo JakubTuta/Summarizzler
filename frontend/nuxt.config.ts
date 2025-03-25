@@ -1,3 +1,4 @@
+/* eslint-disable node/prefer-global/process */
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
 export default defineNuxtConfig({
@@ -12,8 +13,11 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      // eslint-disable-next-line node/prefer-global/process
-      SERVER_URL: process.env.SERVER_URL || 'http://localhost:8000',
+      SERVER_URL: process.env.SERVER_URL
+        ? process.env.SERVER_URL
+        : process.env.DOCKER === 'true'
+          ? 'http://host.docker.internal:8000'
+          : 'http://localhost:8000',
     },
   },
 
@@ -55,7 +59,7 @@ export default defineNuxtConfig({
   ssr: false,
 
   nitro: {
-    preset: 'static',
+    preset: 'node-server',
     firebase: {
       gen: 2,
     },
