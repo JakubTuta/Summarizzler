@@ -309,6 +309,8 @@ class Video:
 
     @staticmethod
     def ask_bot(youtube_url: str, user_prompt: str) -> dict[str, str]:
+        parser = JsonOutputParser(pydantic_object=BotResponse)
+
         client = genai.Client(api_key=get_api_key("GEMINI"))
         gemini_model = "gemini-2.5-pro-exp-03-25"
         contents = [
@@ -320,7 +322,7 @@ class Video:
                         mime_type="video/*",
                     ),
                     types.Part.from_text(
-                        text=f"From the YouTube video extract the following information: {user_prompt}\nReturn the response in the following JSON format: {BotResponse.model_json_schema()}"
+                        text=f"From the YouTube video extract the following information: {user_prompt}\nReturn the response in the following JSON format: {parser.get_format_instructions()}",
                     ),
                 ],
             ),
@@ -337,8 +339,6 @@ class Video:
             timeout=None,
             max_retries=2,
         )
-
-        parser = JsonOutputParser(pydantic_object=BotResponse)
 
         prompt = PromptTemplate(
             template="""
