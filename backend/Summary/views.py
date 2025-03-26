@@ -42,7 +42,6 @@ class WebsiteView(APIView):
 
     @with_required_fields(["url", "prompt"])
     def post(self, request: HttpRequest) -> Response:
-        print("request")
         request_data = request.data  # type: ignore
         url = request_data["url"]
         user_prompt = request_data["prompt"]

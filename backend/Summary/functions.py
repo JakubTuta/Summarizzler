@@ -6,6 +6,8 @@ import requests
 from bs4 import BeautifulSoup
 from django.db.models.manager import BaseManager
 from django.http import QueryDict
+from google import genai
+from google.genai import types
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -14,17 +16,6 @@ from . import models, serializers
 
 langchain_template = (
     "You are tasked with extracting specific information from the following text content: {dom_content}. "
-    "Format the response in this JSON format: {format_instructions}. "
-    "Please follow these instructions carefully: \n\n"
-    "1. **Extract Information:** If not stated otherwise by user, keep the response long, detailed and informative. Only extract the information that directly matches the provided description: {user_prompt}. "
-    "2. **No Extra Content:** Do not include any additional text, comments, or explanations in your response. "
-    "3. **Empty Response:** If no information matches the description, return an empty string ('')."
-    "4. **Direct Data Only:** Your output should contain only the data that is explicitly requested, with no other text."
-    "5. **Format response:** Add to your response html tags like <br> for line breaks, <p> for paragraphs, <h1> for headers, <strong> for bold text, <em> for italic text, <a> for links, <ul> for unordered lists, <ol> for ordered lists, <li> for list items, <table> for tables, <tr> for table rows, <th> for table headers, <td> for table cells, to make the response more clean and readable."
-)
-
-langchain_template_video = (
-    "You are tasked with extracting specific information from the following YouTube video: {url}. "
     "Format the response in this JSON format: {format_instructions}. "
     "Please follow these instructions carefully: \n\n"
     "1. **Extract Information:** If not stated otherwise by user, keep the response long, detailed and informative. Only extract the information that directly matches the provided description: {user_prompt}. "
@@ -318,9 +309,29 @@ class Video:
 
     @staticmethod
     def ask_bot(youtube_url: str, user_prompt: str) -> dict[str, str]:
+        client = genai.Client(api_key=get_api_key("GEMINI"))
+        gemini_model = "gemini-2.5-pro-exp-03-25"
+        contents = [
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part.from_uri(
+                        file_uri=youtube_url,
+                        mime_type="video/*",
+                    ),
+                    types.Part.from_text(
+                        text=f"From the YouTube video extract the following information: {user_prompt}\nReturn the response in the following JSON format: {BotResponse.model_json_schema()}"
+                    ),
+                ],
+            ),
+        ]
+
+        response = client.models.generate_content(model=gemini_model, contents=contents)  # type: ignore
+        json_text_response = str(response.candidates[0].content.parts[0].text)  # type: ignore
+
         model = ChatGoogleGenerativeAI(
             api_key=get_api_key(),  # type: ignore
-            model="gemini-2.5-pro-exp-03-25",
+            model="gemini-2.0-flash",
             temperature=0,
             max_tokens=None,
             timeout=None,
@@ -330,14 +341,28 @@ class Video:
         parser = JsonOutputParser(pydantic_object=BotResponse)
 
         prompt = PromptTemplate(
-            template=langchain_template_video,
-            input_variables=["url", "user_prompt"],
+            template="""
+            You are extracting data from a JSON string that may be wrapped in markdown code blocks like ```json.
+            The JSON contains properties with 'value' fields that hold the actual data.
+            
+            From this text: {json_text_response}
+            
+            Extract each property's 'value' field and create a clean JSON object with just:
+            - title (string)
+            - content (string) 
+            - tags (array of strings)
+            - category (string)
+            
+            Format the response in this JSON format: {format_instructions}
+            Don't include any explanations, just the properly formatted JSON.
+            """,
+            input_variables=["json_text_response"],
             partial_variables={"format_instructions": parser.get_format_instructions()},
         )
 
         chain = prompt | model | parser
 
-        response = chain.invoke({"url": youtube_url, "user_prompt": user_prompt})
+        response = chain.invoke({"json_text_response": json_text_response})
 
         for category in categories:
             if response["category"] in category:

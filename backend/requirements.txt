@@ -11,3 +11,4 @@ langchain-google-genai>=2.0.9
 beautifulsoup4>=4.13.3
 PyPDF2>=3.0.1
 psycopg2-binary>=2.9.10
+google-genai==1.7.0

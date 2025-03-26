@@ -28,6 +28,13 @@ async function send() {
       @submit.prevent="send"
     >
       <v-card-text>
+        <v-alert
+          color="warning"
+          class="text-h6 mb-8 mt-2 text-center"
+        >
+          This feature is experimental. Sometimes the data may not be accurate. In that case try again. Longer videos may take longer to summarize.
+        </v-alert>
+
         <v-text-field
           v-model="url"
           label="YouTube video URL"

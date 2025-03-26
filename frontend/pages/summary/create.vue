@@ -64,6 +64,6 @@ const tabs = [
 
     <CreateFile v-else-if="selectedTab === 'file' && !mobile" />
 
-    <CreateVideo v-else-if="selectedTab === 'file'" />
+    <CreateVideo v-else-if="selectedTab === 'video'" />
   </v-container>
 </template>

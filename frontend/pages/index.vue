@@ -2,7 +2,7 @@
 const router = useRouter()
 
 const summaryStore = useSummaryStore()
-const { summaries, loading } = storeToRefs(summaryStore)
+const { previewSummaries, loading } = storeToRefs(summaryStore)
 
 const authStore = useAuthStore()
 const { user, initLoading } = storeToRefs(authStore)
@@ -88,7 +88,7 @@ watch(initLoading, (newLoading) => {
 
       <v-row v-else>
         <v-col
-          v-for="summary in summaries"
+          v-for="summary in previewSummaries"
           :key="summary.id"
           cols="12"
           sm="6"

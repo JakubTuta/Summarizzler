@@ -224,7 +224,7 @@ async function addDislike() {
             </v-col>
 
             <v-col
-              v-if="summary.contentType === 'website' && summary.url"
+              v-if="(summary.contentType === 'website' || summary.contentType === 'video') && summary.url"
               cols="12"
             >
               <span class="font-weight-bold">
