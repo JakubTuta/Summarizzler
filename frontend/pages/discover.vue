@@ -77,6 +77,7 @@ function updateCategory(newCategory: string | null) {
     return
   }
 
+  summaryStore.clearDiscoveredSummaries()
   loadSummaries(summaryAmount, sortBy.value, contentType.value, newCategory)
 
   if (newCategory !== null) {
@@ -94,6 +95,7 @@ function updateContentType(newContentType: 'text' | 'website' | 'file' | 'video'
     return
   }
 
+  summaryStore.clearDiscoveredSummaries()
   loadSummaries(summaryAmount, sortBy.value, newContentType, category.value)
 
   if (newContentType !== null) {
@@ -111,6 +113,7 @@ function updateSortBy(newSortBy: 'favorites' | 'likes' | 'date' | null) {
     return
   }
 
+  summaryStore.clearDiscoveredSummaries()
   loadSummaries(summaryAmount, newSortBy, contentType.value, category.value)
 
   if (newSortBy !== null) {
@@ -155,6 +158,7 @@ function formatTime(date: Date) {
               v-model="category"
               :items="categories"
               label="Category"
+              clearable
               @update:model-value="updateCategory"
             />
           </v-col>
@@ -168,6 +172,7 @@ function formatTime(date: Date) {
               v-model="contentType"
               :items="contentTypes"
               label="Content type"
+              clearable
               @update:model-value="updateContentType"
             />
           </v-col>

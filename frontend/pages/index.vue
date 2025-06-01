@@ -19,7 +19,9 @@ watch(initLoading, (newLoading) => {
     return
   }
 
-  summaryStore.getPreviewSummaries(summariesPerPage)
+  if (!previewSummaries.value.length) {
+    summaryStore.getPreviewSummaries(summariesPerPage)
+  }
 }, { immediate: true })
 </script>
 
@@ -548,12 +550,17 @@ watch(initLoading, (newLoading) => {
 .summary-title {
   font-size: 1.2rem !important;
   line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  height: auto !important;
+  white-space: normal !important;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  height: auto !important;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .category-chip {

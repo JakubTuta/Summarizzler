@@ -392,6 +392,12 @@ export const useSummaryStore = defineStore('summary', () => {
     dislikeLoading.value = false
   }
 
+  const clearDiscoveredSummaries = () => {
+    discoveredSummaries.value = []
+    lastLoadedDiscoveredObject.value = null
+    isEmpty.value = false
+  }
+
   return {
     loading,
     likeLoading,
@@ -419,5 +425,6 @@ export const useSummaryStore = defineStore('summary', () => {
     addFavorite,
     addLike,
     addDislike,
+    clearDiscoveredSummaries,
   }
 })

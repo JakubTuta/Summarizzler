@@ -96,3 +96,9 @@ Follow these instructions to set up Summarizzler locally for development.
    npm run dev
    ```
    The frontend will be available at [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
